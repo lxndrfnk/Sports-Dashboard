@@ -1,31 +1,33 @@
 import streamlit as st
-from garminconnect import Garmin
 import pandas as pd
-import os
-from dotenv import load_dotenv
+import matplotlib.pyplot as plt
 
-load_dotenv()
+st.set_page_config(page_title="Garmin Dashboard", layout="wide")
 
-# Variante: Nutze Umgebungsvariablen für deine Zugangsdaten (empfohlen!)
-EMAIL = os.getenv("GARMIN_EMAIL")
-PASSWORD = os.getenv("GARMIN_PASSWORD")
+st.title("📊 Mein persönliches Garmin Dashboard")
 
-# Oder: Direkt eintragen (NICHT empfohlen!)
-# EMAIL = "deine@email.com"
-# PASSWORD = "deinpasswort"
+# CSV laden
+try:
+    df = pd.read_csv("garmin_activities.csv")
+    st.success("Daten geladen!")
 
-# Garmin-Session starten
-client = Garmin(EMAIL, PASSWORD, mfa=TRUE)
-client.login()
+    st.write("**Vorschau:**")
+    st.dataframe(df.head())
 
-# Beispiel: Hole die letzten 20 Aktivitäten
-activities = client.get_activities(0, 20)  # (start, limit)
+    # Beispiel-KPI: Anzahl Aktivitäten
+    st.metric("Anzahl Aktivitäten", df.shape[0])
 
-# In Pandas-DataFrame umwandeln
-df = pd.DataFrame(activities)
+    # Beispiel-Plot: Distanz über Zeit
+    if 'startTimeLocal' in df.columns:
+        df['startTimeLocal'] = pd.to_datetime(df['startTimeLocal'])
+        df = df.sort_values('startTimeLocal')
+        
+        fig, ax = plt.subplots()
+        ax.plot(df['startTimeLocal'], df['distance']/1000)
+        ax.set_xlabel("Datum")
+        ax.set_ylabel("Distanz (km)")
+        ax.set_title("Distanz pro Aktivität")
+        st.pyplot(fig)
 
-print(df.head())
-
-# Speichere als CSV
-df.to_csv("garmin_activities.csv", index=False)
-print("Daten gespeichert in garmin_activities.csv")
+except FileNotFoundError:
+    st.error("CSV-Datei nicht gefunden! Bitte zuerst fetch_garmin.py ausführen.")
