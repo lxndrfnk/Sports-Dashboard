@@ -1,0 +1,7 @@
+[theme]
+base="dark"
+primaryColor="#1DB954"    # Beispiel: Grün wie Spotify
+backgroundColor="#4b4c4d"
+secondaryBackgroundColor="#1a1a1a"
+textColor="#FFFFFF"
+font="League Spartan"
