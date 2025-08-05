@@ -2,10 +2,16 @@ import streamlit as st
 import pandas as pd
 import ast
 import datetime
+import matplotlib.pyplot as plt
+from datetime import date
 
 # ---------- Seiteneinstellungen ----------
 
-st.set_page_config(page_title="Triathlon Dashboard", layout="wide")
+st.set_page_config(
+    page_title="Triathlon-Dashboard",
+    page_icon="🏅",
+    layout="wide"
+)
 
 # ---------- Garmin Daten laden ----------
 
@@ -56,40 +62,71 @@ def seconds_to_pace(seconds_per_unit):
 with st.sidebar:
     st.markdown("""
     <style>
-    .color-circle {
-      display: inline-block;
-      width: 20px;      
-      height: 20px;
-      border-radius: 50%;
-      margin-right: 10px;
+    .color-square {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    border: 2px solid;
+    border-radius: 3px;
+    background-color: black;
+    margin-right: 10px;
     }
     .legend-item {
-      display: flex;
-      align-items: center;
-      margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
     }
     .legend-text {
-      font-size: 24px;     
-      font-weight: 500;
-      color: white;
+    font-size: 24px;
+    font-weight: 500;
+    color: white;
     }
     </style>
     """, unsafe_allow_html=True)
 
     st.markdown(f"""
     <div class="legend-item">
-      <span class="color-circle" style="background:#0077b6;"></span>
-      <span class="legend-text">Swim</span>
+    <span class="color-square" style="border-color:#0077b6;"></span>
+    <span class="legend-text">Swim</span>
     </div>
     <div class="legend-item">
-      <span class="color-circle" style="background:#43aa8b;"></span>
-      <span class="legend-text">Bike</span>
+    <span class="color-square" style="border-color:#43aa8b;"></span>
+    <span class="legend-text">Bike</span>
     </div>
     <div class="legend-item">
-      <span class="color-circle" style="background:#f94144;"></span>
-      <span class="legend-text">Run</span>
+    <span class="color-square" style="border-color:#f94144;"></span>
+    <span class="legend-text">Run</span>
     </div>
     """, unsafe_allow_html=True)
+
+
+    st.markdown("---")
+    st.subheader("Meine nächsten Wettkämpfe")
+
+    races = [
+        {"name": "28. Willicher Triathlon", "date": date(2025, 9, 7), "distance": "Sprintdistanz"},
+        {"name": "Venloop", "date": date(2026, 3, 29), "distance": "Halbmarathon"}
+    ]
+
+    today = date.today()
+
+    for race in races:
+        delta = (race["date"] - today).days
+
+        st.markdown(f"""
+            <div style="
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                border-radius: 10px;
+                padding: 10px;
+                margin-bottom: 10px;
+                background-color: rgba(255, 255, 255, 0.05);
+            ">
+                <strong>🏁 {race['name']}</strong><br>
+                📏 {race['distance']}<br>
+                📆 {race['date'].strftime('%d.%m.%Y')}<br>
+                ⏳ Noch <strong><span style='color:#39FF14;'>{delta}</span></strong> Tage
+            </div>
+        """, unsafe_allow_html=True)
 
 # ---------- Titel ----------
 
@@ -240,26 +277,33 @@ st.write("---")
 
 st.subheader("📈 Trainingsdaten 📈")
 
+df_tri["startTimeLocal"] = pd.to_datetime(df_tri["startTimeLocal"])
+
+min_date = df_tri["startTimeLocal"].min().date()
+max_date = df_tri["startTimeLocal"].max().date()
+
 col1, col2 = st.columns(2)
 with col1:
     start_date = st.date_input(
         "Start",
-        value=datetime.date.today().replace(month=1, day=1),
+        value=min_date,
+        min_value=min_date,
+        max_value=max_date,
         format="DD.MM.YYYY"
     )
 with col2:
     end_date = st.date_input(
         "Ende",
-        value=datetime.date.today(),
+        value=max_date,
+        min_value=min_date,
+        max_value=max_date,
         format="DD.MM.YYYY"
     )
 
-df_tri["startTimeLocal"] = pd.to_datetime(df_tri["startTimeLocal"])
 df_filtered = df_tri[
     (df_tri["startTimeLocal"].dt.date >= start_date) &
     (df_tri["startTimeLocal"].dt.date <= end_date)
 ]
-
 swim_count = df_filtered[df_filtered["typeKey"] == "lap_swimming"].shape[0]
 bike_count = df_filtered[df_filtered["typeKey"] == "cycling"].shape[0]
 run_count  = df_filtered[df_filtered["typeKey"] == "running"].shape[0]
@@ -319,21 +363,21 @@ cols_dist = st.columns(3)
 with cols_dist[0]:
     st.markdown(f"""
         <div class="metric-card metric-swim">
-            <h3>🏊 Gesamtdistanz</h3>
+            <h3>📐 Gesamtdistanz</h3>
             <p>{swim_distance_km:.1f} km</p>
         </div>
     """, unsafe_allow_html=True)
 with cols_dist[1]:
     st.markdown(f"""
         <div class="metric-card metric-bike">
-            <h3>🚴 Gesamtdistanz</h3>
+            <h3>📐 Gesamtdistanz</h3>
             <p>{bike_distance_km:.0f} km</p>
         </div>
     """, unsafe_allow_html=True)
 with cols_dist[2]:
     st.markdown(f"""
         <div class="metric-card metric-run">
-            <h3>🏃 Gesamtdistanz</h3>
+            <h3>📐 Gesamtdistanz</h3>
             <p>{run_distance_km:.0f} km</p>
         </div>
     """, unsafe_allow_html=True)
@@ -342,21 +386,22 @@ cols_time = st.columns(3)
 with cols_time[0]:
     st.markdown(f"""
         <div class="metric-card metric-swim">
-            <h3>🏊 Gesamtzeit</h3>
+            <h3>⌛ Gesamtzeit</h3>
             <p>{swim_duration_h:.1f} h</p>
         </div>
     """, unsafe_allow_html=True)
 with cols_time[1]:
     st.markdown(f"""
         <div class="metric-card metric-bike">
-            <h3>🚴 Gesamtzeit</h3>
+            <h3>⌛ Gesamtzeit</h3>
             <p>{bike_duration_h:.1f} h</p>
         </div>
     """, unsafe_allow_html=True)
 with cols_time[2]:
     st.markdown(f"""
         <div class="metric-card metric-run">
-            <h3>🏃 Gesamtzeit</h3>
+            <h3>⌛ Gesamtzeit</h3>
             <p>{run_duration_h:.1f} h</p>
         </div>
     """, unsafe_allow_html=True)
+

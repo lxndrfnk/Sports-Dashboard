@@ -1,4 +1,6 @@
 startTimeLocal,activityType,distance,duration,averageSpeed,averageHR,calories
+2025-08-04 17:47:53,"{'typeId': 1, 'typeKey': 'running', 'parentTypeId': 17, 'isHidden': False, 'restricted': False, 'trimmable': True}",5999.25,1866.7900390625,3.2139999866485596,136.0,429.0
+2025-08-02 10:11:48,"{'typeId': 1, 'typeKey': 'running', 'parentTypeId': 17, 'isHidden': False, 'restricted': False, 'trimmable': True}",9199.6396484375,2838.824951171875,3.240999937057495,134.0,599.0
 2025-07-30 18:39:00,"{'typeId': 1, 'typeKey': 'running', 'parentTypeId': 17, 'isHidden': False, 'restricted': False, 'trimmable': True}",5000.9501953125,1413.43994140625,3.5380001068115234,144.0,337.0
 2025-07-30 17:38:22,"{'typeId': 2, 'typeKey': 'cycling', 'parentTypeId': 17, 'isHidden': False, 'restricted': False, 'trimmable': True}",20575.30078125,3153.83203125,6.52400016784668,104.0,365.0
 2025-07-28 17:28:18,"{'typeId': 1, 'typeKey': 'running', 'parentTypeId': 17, 'isHidden': False, 'restricted': False, 'trimmable': True}",8298.740234375,2970.81103515625,2.7929999828338623,114.0,441.0
