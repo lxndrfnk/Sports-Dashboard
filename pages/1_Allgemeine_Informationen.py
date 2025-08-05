@@ -1,21 +1,23 @@
 import streamlit as st
 
-st.title("ℹ️ Triathlon-Informationen")
+st.title("Was ist Triathlon?")
 
 # ---------- Triathlon-Erklärung ----------
+
 st.write("""
 Triathlon ist eine Ausdauersportart, bestehend aus einem Mehrkampf der Disziplinen Schwimmen, Radfahren und Laufen,
-die nacheinander und in der Regel in genau dieser Reihenfolge zu absolvieren sind.
+die nacheinander und in genau dieser Reihenfolge zu absolvieren sind.
 Die Besonderheit dieses Sports besteht darin, dass eine bestimmte, festgelegte Strecke so schnell wie möglich
 zurückzulegen ist, wobei die Uhr auch bei zeitlichen Unterbrechungen wie z. B. den Wechseln zwischen den Disziplinen weiter läuft.
-Die Wortschöpfung „Triathlon“ setzt sich aus den griechischen Ausdrücken τρεῖς/τρία bzw. treis/tria, „drei“, und ἆθλος bzw. athlos,
+Die Wortschöpfung „Triathlon“ setzt sich aus den griechischen Ausdrücken treis/tria, „drei“, und athlos,
 „Wettkampf“ zusammen. Triathlon ist seit dem Jahr 2000 auch eine olympische Disziplin.
 """)
 
 st.write("---")
 
 # ---------- Triathlon-Distanzen ----------
-st.subheader("⬇️ Triathlon-Distanzen ⬇️")
+
+st.subheader("Triathlon-Distanzen")
 
 tabs = st.tabs(["Sprintdistanz", "Olympische Distanz", "Mitteldistanz", "Langdistanz"])
 

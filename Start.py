@@ -1,9 +1,4 @@
 import streamlit as st
-import pandas as pd
-import ast
-import datetime
-import matplotlib.pyplot as plt
-from datetime import date
 
 # ---------- Seiteneinstellungen ----------
 
@@ -12,6 +7,14 @@ st.set_page_config(
     page_icon="🏅",
     layout="wide"
 )
+
+# ---------- Import weiterer Module ----------
+
+import pandas as pd
+import ast
+import datetime
+import matplotlib.pyplot as plt
+from datetime import date
 
 # ---------- Garmin Daten laden ----------
 
