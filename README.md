@@ -20,7 +20,7 @@ Die App besteht aus mehreren Seiten:
 - `🏅 Meine Wettkämpfe` – Übersicht über vergangene und geplante Laufveranstaltungen
 - `📊 Trainingsdaten` – Umfangreiche Diagramme zu Puls, Tempo und Streckenlänge
 - `❤️ Meine Trainingsbereiche` – Kategorisierung nach Pulszonen
-- `🧠 Analyse` – Korrelation, Differenzverlauf, Normalisierung & Scatterplots
+- `🔬 Analyse` – Korrelation, Differenzverlauf, Normalisierung & Scatterplots
 - `🧠 Prognose` – Zukünftige Entwicklung basierend auf aktuellen Trends
 
 ---
