@@ -1,3 +1,7 @@
 garminconnect
 pandas
 matplotlib
+streamlit
+seaborn
+ast
+numpy
