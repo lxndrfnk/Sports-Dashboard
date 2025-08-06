@@ -1,8 +1,10 @@
 import streamlit as st
 
-st.title("Was ist Triathlon?")
+st.title("Allgemeine Informationen")
 
 # ---------- Triathlon-Erklärung ----------
+
+st.subheader("Was ist ein Triathlon?")
 
 st.write("""
 Triathlon ist eine Ausdauersportart, bestehend aus einem Mehrkampf der Disziplinen Schwimmen, Radfahren und Laufen,
