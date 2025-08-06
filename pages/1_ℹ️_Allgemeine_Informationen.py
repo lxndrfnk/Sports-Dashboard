@@ -2,6 +2,18 @@ import streamlit as st
 
 st.title("Allgemeine Informationen")
 
+# ---------- Schriftart ----------
+
+st.markdown("""
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter&display=swap');
+
+        html, body, [class*="css"]  {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
 # ---------- Triathlon-Erklärung ----------
 
 st.subheader("Was ist ein Triathlon?")

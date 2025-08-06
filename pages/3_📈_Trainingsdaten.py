@@ -6,6 +6,17 @@ import matplotlib.pyplot as plt
 from datetime import date
 from matplotlib.patches import FancyBboxPatch
 
+# ---------- Schriftart ----------
+
+st.markdown("""
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter&display=swap');
+
+        html, body, [class*="css"]  {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+""", unsafe_allow_html=True)
 
 # ---------- Garmin Daten laden ----------
 

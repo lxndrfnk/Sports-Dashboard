@@ -5,6 +5,20 @@ import datetime
 import matplotlib.pyplot as plt
 from datetime import date
 
+# ---------- Schriftart ----------
+
+st.markdown("""
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter&display=swap');
+
+        html, body, [class*="css"]  {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
+# ---------- Einheiten ----------
+
 def time_to_seconds(timestr):
     if "--" in timestr or timestr.strip() == "":
         return None

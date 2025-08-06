@@ -7,6 +7,18 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 
+# ---------- Schriftart ----------
+
+st.markdown("""
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter&display=swap');
+
+        html, body, [class*="css"]  {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
 # ---------- Textbereich ----------
 
 st.title("📈 Effizienzsteigerung im Ausdauertraining: Eine datenbasierte Untersuchung mittels Herzfrequenz-Geschwindigkeits-Beziehung.")
