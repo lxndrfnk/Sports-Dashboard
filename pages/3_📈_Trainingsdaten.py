@@ -10,10 +10,10 @@ from matplotlib.patches import FancyBboxPatch
 
 st.markdown("""
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=League+Spartan&display=swap');
 
         html, body, [class*="css"]  {
-            font-family: 'Inter', sans-serif;
+            font-family: 'League Spartan', sans-serif;
         }
     </style>
 """, unsafe_allow_html=True)
