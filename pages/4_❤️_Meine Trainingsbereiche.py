@@ -54,3 +54,4 @@ with tabs[4]:
     st.write("**Herzfrequenz**: > 157")
     st.write("**Herzfrequenz %**: 92 - 100 %")
     st.write("**Pace**: < 04:31 min/km")
+    

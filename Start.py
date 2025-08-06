@@ -89,5 +89,3 @@ def seconds_to_pace(seconds_per_unit):
     return f"{m:02d}:{s:02d}"
 
 # ---------- Sidebar ----------
-
-

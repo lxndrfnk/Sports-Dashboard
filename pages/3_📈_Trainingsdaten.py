@@ -5,6 +5,7 @@ import datetime
 import matplotlib.pyplot as plt
 from datetime import date
 from matplotlib.patches import FancyBboxPatch
+import plotly.graph_objects as go
 
 # ---------- Schriftart ----------
 
@@ -207,7 +208,7 @@ with cols_time[2]:
 
 st.markdown("---")
 
-# ---------- Kilometer pro Woche und Monat ----------
+# ---------- Kilometer pro Jahr und Monat ----------
 
 df["startTimeLocal"] = pd.to_datetime(df["startTimeLocal"], errors="coerce")
 
@@ -235,38 +236,53 @@ by_week = df.groupby("week")["distance_km"].sum()
 
 st.header("🏃 Kilometer pro Jahr")
 
-fig1, ax1 = plt.subplots()
-fig1.patch.set_facecolor('#4b4c4d')   
-ax1.set_facecolor('#4b4c4d')          
+fig = go.Figure()
 
-by_year.plot(
-    kind="bar",
-    ax=ax1,
-    color="#ffffff"                   
+fig.add_trace(go.Bar(
+    x=by_year.index.astype(str),
+    y=by_year.values,
+    marker_color="white",
+    text=[f"{int(val)}" for val in by_year.values],
+    textposition='inside',
+    insidetextanchor='middle',
+    width=0.4
+))
+
+fig.update_layout(
+    plot_bgcolor="#4b4c4d",
+    paper_bgcolor="#4b4c4d",
+    font=dict(color="white"),
+    margin=dict(l=40, r=20, t=30, b=40),
+    xaxis=dict(
+        showline=True,
+        linecolor="white",
+        tickfont=dict(color="white"),
+        ticklen=6,
+        tickwidth=1,
+        tickcolor="white",
+        ticks="outside",
+        tickmode="array",
+         tickvals=[str(year) for year in by_year.index]
+    ),
+    yaxis=dict(
+        showline=True,
+        showticklabels=True,  
+        ticklen=6,
+        tickwidth=1,
+        tickcolor="white",
+        tickfont=dict(color="white"),
+        showgrid=True,
+        gridcolor="white",
+        tickformat=".0f"
+    ),
+    showlegend=False
 )
 
-ax1.tick_params(colors="white")
-ax1.set_xlabel("")
-ax1.set_ylabel("")
-ax1.set_yticks([])  
+fig.update_xaxes(linecolor="white")
+fig.update_yaxes(linecolor="white")
 
-for spine in ax1.spines.values():
-    spine.set_edgecolor("#f94144")
-
-for bar in ax1.patches:
-    height = bar.get_height()
-    ax1.text(
-        bar.get_x() + bar.get_width() / 2,
-        height / 2,
-        f"{height:.0f}",
-        ha='center', va='center',
-        color='black', fontsize=10
-    )
-
-for label in ax1.get_xticklabels():
-    label.set_rotation(0)
-
-st.pyplot(fig1)
+with st.expander("Diagramm anzeigen", expanded=False):
+    st.plotly_chart(fig, use_container_width=True)
 
 # ---------- Diagramm: Kilometer pro Monat ----------
 
