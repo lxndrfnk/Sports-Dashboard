@@ -60,12 +60,8 @@ else:
     st.error("Keine passende Spalte für Aktivitätstyp gefunden.")
     st.stop()
 
-# Nur Triathlon-Disziplinen
-
 triathlon_types = ["running", "cycling", "lap_swimming"]
 df_tri = df[df["typeKey"].isin(triathlon_types)]
-
-# ---------- Hilfsfunktionen ----------
 
 def time_to_seconds(timestr):
     if "--" in timestr or timestr.strip() == "":
@@ -79,3 +75,7 @@ def seconds_to_pace(seconds_per_unit):
     m = int(seconds_per_unit // 60)
     s = int(seconds_per_unit % 60)
     return f"{m:02d}:{s:02d}"
+
+# ---------- Sidebar ----------
+
+

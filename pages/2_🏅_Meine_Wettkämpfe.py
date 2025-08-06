@@ -162,6 +162,20 @@ my_races = [
         "finish_time": "06:09:57",
         "finish_delta": "",
     },
+    {
+        "event": "Töwerland Osterlauf",
+        "year": 2022,
+        "distance_category": "5 Kilometer",
+        "finish_time": "00:22:31",
+        "finish_delta": "",
+    },
+    {
+        "event": "14. Korschenbroicher Waldlauf",
+        "year": 2018,
+        "distance_category": "5 Kilometer",
+        "finish_time": "00:21:55",
+        "finish_delta": "",
+    },
 ]
 
 distance_categories_running = ["5 Kilometer", "10 Kilometer", "Halbmarathon", "Marathon"]

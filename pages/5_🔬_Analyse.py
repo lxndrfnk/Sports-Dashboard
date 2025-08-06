@@ -4,14 +4,16 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import ast
 import numpy as np
+import plotly.express as px
+import plotly.graph_objects as go
 
 # ---------- Textbereich ----------
 
-st.title("Effizienzsteigerung im Ausdauertraining: Eine datenbasierte Untersuchung mittels Herzfrequenz-Geschwindigkeits-Beziehung.")
+st.title("📈 Effizienzsteigerung im Ausdauertraining: Eine datenbasierte Untersuchung mittels Herzfrequenz-Geschwindigkeits-Beziehung.")
 
 st.write("---")
 
-st.header("Hypothese")
+st.header("➡️ Hypothese")
 
 with st.expander("Mit zunehmender Ausdauer sinkt meine Herzfrequenz bei vergleichbarer Geschwindigkeit.", expanded=False):
 
@@ -26,6 +28,8 @@ with st.expander("Mit zunehmender Ausdauer sinkt meine Herzfrequenz bei vergleic
     """)
 
 st.write("---")
+
+st.header("➡️ Analyse")
 
 # ---------- Daten vorbereiten ----------
 
@@ -54,47 +58,58 @@ df["speed_kmh"] = df["distance_km"] / df["duration_h"]
 
 # ---------- Scatterplot ----------
 
-with st.expander("Zusammenhang zwischen HF und Geschwindigkeit", expanded=False):
-    
-    fig, ax = plt.subplots(figsize=(10, 5))
-    fig.patch.set_facecolor('#4b4c4d')
-    ax.set_facecolor('#4b4c4d')
+fig = px.scatter(
+    df,
+    x="averageHR",
+    y="speed_kmh",
+    trendline="ols",  
+    labels={
+        "averageHR": "Ø Herzfrequenz (bpm)",
+        "speed_kmh": "Ø Geschwindigkeit (km/h)"
+    },
+    title="",  
+    template="plotly_dark",
+    width=1000,
+    height=500
+)
 
-    sns.scatterplot(
-        data=df,
-        x="averageHR",
-        y="speed_kmh",
-        ax=ax,
-        color="white"
+fig.update_layout(
+    plot_bgcolor="#4b4c4d",
+    paper_bgcolor="#4b4c4d",
+    font=dict(color="white"),
+    margin=dict(l=40, r=20, t=40, b=40),
+    xaxis=dict(
+        title="Ø Herzfrequenz (bpm)",
+        title_standoff=40,
+        color="white",
+        tickcolor="white",
+        linecolor="white",
+        showline=True,
+        showgrid=False,
+        ticks="outside",           
+        ticklen=6,                
+        tickwidth=1,              
+        tickfont=dict(color="white")
+    ),
+    yaxis=dict(
+        title="Ø Geschwindigkeit (km/h)",
+        title_standoff=40,
+        color="white",
+        tickcolor="white",
+        linecolor="white",
+        showline=True,
+        showgrid=False,
+        ticks="outside",
+        ticklen=6,
+        tickwidth=1,
+     tickfont=dict(color="white")
     )
+)
 
-    sns.regplot(
-        data=df,
-        x="averageHR",
-        y="speed_kmh",
-        scatter=False,
-        ax=ax,
-        color="#f94144",  
-        line_kws={"linestyle": "--", "linewidth": 1}
-    )
+fig.update_traces(marker=dict(color="white", size=8, line=dict(width=1)))
 
-    ax.set_xlabel("")
-    ax.set_ylabel("")
-    ax.tick_params(colors="white")
-    
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-
-    ax.spines["bottom"].set_visible(True)
-    ax.spines["bottom"].set_color("white")
-    ax.spines["bottom"].set_linewidth(1)
-
-    ax.spines["left"].set_visible(True)
-    ax.spines["left"].set_color("white")
-    ax.spines["left"].set_linewidth(1)
-
-
-    st.pyplot(fig)
+with st.expander("Scatterplot: Zusammenhang zwischen Herzfrequenz und Geschwindigkeit", expanded=False):
+    st.plotly_chart(fig, use_container_width=True)
 
 # ---------- Korrelationskoeffizient ----------
 
@@ -133,194 +148,337 @@ with st.expander("Korrelationskoeffizient anzeigen", expanded=False):
         unsafe_allow_html=True
     )
 
-# ---------- Liniendiagramm: Geschwindigkeit ----------
+# ---------- Diagramm: Durchschnittliche HF ----------
 
-avg_speed = df["speed_kmh"].mean()
+avg_hr = df["averageHR"].mean()
 
-with st.expander("Durchschnittliche Geschwindigkeit", expanded=False):
-    fig, ax = plt.subplots(figsize=(30, 4))
-    fig.patch.set_facecolor('#4b4c4d')
-    ax.set_facecolor('#4b4c4d')
+layout = go.Layout(
+    plot_bgcolor="#4b4c4d",
+    paper_bgcolor="#4b4c4d",
+    font=dict(color="white"),
+    xaxis=dict(
+        title="",       
+        title_standoff=40,                 
+        showgrid=False,
+        showline=True,
+        linecolor="white",
+        tickcolor="white",
+        color="white"
+    ),
+    yaxis=dict(
+        title="Ø Herzfrequenz (bpm)",   
+        title_standoff=40,
+        showgrid=False,
+        showline=True,
+        linecolor="white",
+        tickcolor="white",
+        color="white"
+    ),
+    margin=dict(l=20, r=20, t=20, b=40),
+)
 
-    ax.plot(
-        df["startTimeLocal"],
-        df["speed_kmh"],
-        color="#ffffff",
-        linewidth=2,
-        linestyle='dotted'
-    )
+fig = go.Figure(layout=layout)
 
-    ax.axhline(avg_speed, color='white', linestyle='--', linewidth=1)
+fig.add_trace(go.Scatter(
+    x=df["startTimeLocal"],
+    y=df["averageHR"],
+    mode="lines",
+    line=dict(color="white", width=2),
+    name="Ø HF"
+))
 
-    ax.set_yticks([avg_speed])
-    ax.set_yticklabels([f"{avg_speed:.1f} km/h"], color="white")
-
-    ax.tick_params(colors="white")
-    ax.set_xlabel("")
-    ax.set_ylabel("")
-    ax.set_xticks([])  
-
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-    ax.spines["bottom"].set_color("white")
-    ax.spines["bottom"].set_linewidth(1)
-    ax.spines["left"].set_color("white")
-    ax.spines["left"].set_linewidth(1)
-
-    st.pyplot(fig)
-
-# ---------- Liniendiagramm: HF ----------
+fig.add_trace(go.Scatter(
+    x=df["startTimeLocal"],
+    y=[avg_hr] * len(df),
+    mode="lines",
+    line=dict(color="lightgray", width=1, dash="dash"),
+    name="Durchschnitt"
+))
 
 with st.expander("Durchschnittliche Herzfrequenz", expanded=False):
-    avg_hr = df["averageHR"].mean()
+    st.plotly_chart(fig, use_container_width=True)
 
-    fig, ax = plt.subplots(figsize=(30, 4))
-    fig.patch.set_facecolor('#4b4c4d')
-    ax.set_facecolor('#4b4c4d')
+# ---------- Diagramm: Durchschnittliche Geschwindigkeit
 
-    ax.plot(
-        df["startTimeLocal"],
-        df["averageHR"],
-        color="white",
-        linewidth=2
+df["speed_kmh"] = (df["distance"] / 1000) / (df["duration"] / 3600)
+avg_speed = df["speed_kmh"].mean()
+
+layout = go.Layout(
+    plot_bgcolor="#4b4c4d",
+    paper_bgcolor="#4b4c4d",
+    font=dict(color="white"),
+    xaxis=dict(
+        title="",
+        title_standoff=40,
+        showgrid=False,
+        showline=True,
+        linecolor="white",
+        tickcolor="white",
+        ticks="outside",
+        ticklen=6,
+        tickwidth=1,
+        tickfont=dict(color="white")
+    ),
+    yaxis=dict(
+        title="Ø Geschwindigkeit (km/h)",
+        title_standoff=40,
+        showgrid=False,
+        showline=True,
+        linecolor="white",
+        tickcolor="white",
+        ticks="outside",
+        ticklen=6,
+        tickwidth=1,
+        tickfont=dict(color="white")
+    ),
+    margin=dict(l=20, r=20, t=20, b=40)
+)
+
+fig = go.Figure(layout=layout)
+
+fig.add_trace(go.Scatter(
+    x=df["startTimeLocal"],
+    y=df["speed_kmh"],
+    mode="lines",
+    line=dict(color="white", width=2, dash="dot"),
+    name="Ø Geschwindigkeit"
+))
+
+fig.add_trace(go.Scatter(
+    x=df["startTimeLocal"],
+    y=[avg_speed] * len(df),
+    mode="lines",
+    line=dict(color="lightgray", width=1, dash="dash"),
+    name="Durchschnitt"
+))
+
+with st.expander("Durchschnittliche Geschwindigkeit", expanded=False):
+    st.plotly_chart(fig, use_container_width=True)
+
+# ---------- Vergleich: Herzfrequenz & Geschwindigkeit (Originalwerte) ----------
+
+df["speed_kmh"] = (df["distance"] / 1000) / (df["duration"] / 3600)
+
+avg_hr = df["averageHR"].mean()
+avg_speed = df["speed_kmh"].mean()
+
+layout = go.Layout(
+    plot_bgcolor="#4b4c4d",
+    paper_bgcolor="#4b4c4d",
+    font=dict(color="white"),
+    margin=dict(l=20, r=20, t=20, b=40),
+    xaxis=dict(
+        title="",
+        title_standoff=40,
+        showgrid=False,
+        showline=True,
+        linecolor="white",
+        tickcolor="white",
+        ticks="outside",
+        ticklen=6,
+        tickwidth=1,
+        tickfont=dict(color="white")
+    ),
+    yaxis=dict(
+        title="Ø Herzfrequenz (bpm)",
+        title_standoff=40,
+        showgrid=False,
+        showline=True,
+        linecolor="white",
+        tickcolor="white",
+        ticks="outside",
+        ticklen=6,
+        tickwidth=1,
+        tickfont=dict(color="white")
+    ),
+    yaxis2=dict(
+        title="Ø Geschwindigkeit (km/h)",
+        title_standoff=40,
+        overlaying="y",
+        side="right",
+        showgrid=False,
+        showline=True,
+        linecolor="white",
+        tickcolor="white",
+        ticks="outside",
+        ticklen=6,
+        tickwidth=1,
+        tickfont=dict(color="white")
     )
+)
 
-    ax.axhline(avg_hr, color='white', linestyle='--', linewidth=1)
+fig = go.Figure(layout=layout)
 
-    ax.set_yticks([avg_hr])
-    ax.set_yticklabels([f"{avg_hr:.0f} bpm"], color="white")
+fig.add_trace(go.Scatter(
+    x=df["startTimeLocal"],
+    y=df["averageHR"],
+    mode="lines",
+    name="Ø Herzfrequenz",
+    line=dict(color="white", width=2),
+    yaxis="y"
+))
 
-    ax.tick_params(colors="white")
-    ax.set_xlabel("")
-    ax.set_ylabel("")
-    ax.set_xticks([])
+fig.add_trace(go.Scatter(
+    x=df["startTimeLocal"],
+    y=df["speed_kmh"],
+    mode="lines",
+    name="Ø Geschwindigkeit",
+    line=dict(color="lightgray", width=2, dash="dot"),
+    yaxis="y2"
+))
 
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-    ax.spines["bottom"].set_color("white")
-    ax.spines["bottom"].set_linewidth(1)
-    ax.spines["left"].set_color("white")
-    ax.spines["left"].set_linewidth(1)
+# Durchschnittslinie HF
+# fig.add_trace(go.Scatter(
+#     x=df["startTimeLocal"],
+#     y=[avg_hr] * len(df),
+#     mode="lines",
+#     line=dict(color="white", width=1, dash="dash"),
+#     name="HF-Durchschnitt",
+#     showlegend=False,
+#     yaxis="y"
+# ))
 
-    st.pyplot(fig)
-
-# ---------- Vergleich Geschwindigkeit vs. HF
+# Durchschnittslinie Geschwindigkeit
+# fig.add_trace(go.Scatter(
+#     x=df["startTimeLocal"],
+#     y=[avg_speed] * len(df),
+#     mode="lines",
+#     line=dict(color="lightgray", width=1, dash="dash"),
+#     name="Speed-Durchschnitt",
+#     showlegend=False,
+#     yaxis="y2"
+# ))
 
 with st.expander("Vergleich: Herzfrequenz & Geschwindigkeit (Originalwerte)", expanded=False):
-    fig, ax1 = plt.subplots(figsize=(30, 5))
-    fig.patch.set_facecolor('#4b4c4d')
-    ax1.set_facecolor('#4b4c4d')
-
-    ax1.plot(df["startTimeLocal"], df["averageHR"], color="white", linewidth=2, label="Herzfrequenz")
-    ax1.tick_params(axis='y', labelcolor='white')
-    ax1.set_ylabel("Herzfrequenz (bpm)", color="white")
-
-    ax2 = ax1.twinx()
-    ax2.plot(df["startTimeLocal"], df["speed_kmh"], color="white", linestyle="dotted", linewidth=2, label="Geschwindigkeit")
-    ax2.tick_params(axis='y', labelcolor='white')
-    ax2.set_ylabel("Geschwindigkeit (km/h)", color="white")
-
-    ax1.set_xlabel("")
-    ax1.set_xticks([])
-    ax1.tick_params(colors="white")
-    
-    for spine in ax1.spines.values():
-        spine.set_edgecolor("#4b4c4d")
-    for spine in ax2.spines.values():
-        spine.set_edgecolor("#4b4c4d")
-
-    lines_1, labels_1 = ax1.get_legend_handles_labels()
-    lines_2, labels_2 = ax2.get_legend_handles_labels()
-    ax1.legend(lines_1 + lines_2, labels_1 + labels_2, loc="upper right", facecolor='#4b4c4d', labelcolor='white')
-
-    st.pyplot(fig)
+    st.plotly_chart(fig, use_container_width=True)
 
 # ---------- Normalisiertes Liniendiagramm ----------
 
+df_filtered = df[["startTimeLocal", "averageHR", "speed_kmh"]].dropna()
+
+df_filtered["HR_norm"] = (
+    (df_filtered["averageHR"] - df_filtered["averageHR"].min()) /
+    (df_filtered["averageHR"].max() - df_filtered["averageHR"].min())
+)
+
+df_filtered["Speed_norm"] = (
+    (df_filtered["speed_kmh"] - df_filtered["speed_kmh"].min()) /
+    (df_filtered["speed_kmh"].max() - df_filtered["speed_kmh"].min())
+)
+
+layout = go.Layout(
+    plot_bgcolor="#4b4c4d",
+    paper_bgcolor="#4b4c4d",
+    font=dict(color="white"),
+    margin=dict(l=20, r=20, t=20, b=40),
+    xaxis=dict(
+        title="",
+        title_standoff=40,
+        showgrid=False,
+        showline=True,
+        linecolor="white",
+        tickcolor="white",
+        ticks="outside",
+        ticklen=6,
+        tickwidth=1,
+        tickfont=dict(color="white")
+    ),
+    yaxis=dict(
+        title="Normalisierte Werte (0–1)",
+        title_standoff=40,
+        showgrid=False,
+        showline=True,
+        linecolor="white",
+        tickcolor="white",
+        ticks="outside",
+        ticklen=6,
+        tickwidth=1,
+        tickfont=dict(color="white")
+    )
+)
+
+fig = go.Figure(layout=layout)
+
+fig.add_trace(go.Scatter(
+    x=df_filtered["startTimeLocal"],
+    y=df_filtered["HR_norm"],
+    mode="lines",
+    name="Ø Herzfrequenz",
+    line=dict(color="white", width=2)
+))
+
+fig.add_trace(go.Scatter(
+    x=df_filtered["startTimeLocal"],
+    y=df_filtered["Speed_norm"],
+    mode="lines",
+    name="Ø Geschwindigkeit",
+    line=dict(color="lightgray", width=2, dash="dot")
+))
+
 with st.expander("Normalisiertes Liniendiagramm", expanded=False):
-    
-    df_norm = df.copy()
-    df_norm["averageHR_norm"] = (df["averageHR"] - df["averageHR"].min()) / (df["averageHR"].max() - df["averageHR"].min())
-    df_norm["speed_kmh_norm"] = (df["speed_kmh"] - df["speed_kmh"].min()) / (df["speed_kmh"].max() - df["speed_kmh"].min())
-
-    fig, ax = plt.subplots(figsize=(30, 4))
-    fig.patch.set_facecolor('#4b4c4d')
-    ax.set_facecolor('#4b4c4d')
-
-    ax.plot(
-        df["startTimeLocal"],
-        df_norm["averageHR_norm"],
-        label="HF (normalisiert)",
-        color="white",
-        linewidth=2
-    )
-    ax.plot(
-        df["startTimeLocal"],
-        df_norm["speed_kmh_norm"],
-        label="Geschwindigkeit (normalisiert)",
-        color="white",
-        linewidth=2,
-        linestyle="dotted"
-    )
-
-    ax.legend(["Herzfrequenz", "Geschwindigkeit"], loc="upper right", facecolor='#4b4c4d', labelcolor='white')
-
-    ax.set_xlabel("")
-    ax.set_ylabel("")
-    ax.set_xticks([])
-    ax.tick_params(colors="white")
-
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-    ax.spines["bottom"].set_color("white")
-    ax.spines["bottom"].set_linewidth(1)
-    ax.spines["left"].set_color("white")
-    ax.spines["left"].set_linewidth(1)
-
-    st.pyplot(fig)
+    st.plotly_chart(fig, use_container_width=True)
 
 # ---------- Differenz der Normalisierungen ----------
 
-with st.expander("Differenz zwischen normalisierter Geschwindigkeit und Herzfrequenz", expanded=False):
-    
-    df_diff = df.copy()
-    df_diff["averageHR_norm"] = (df["averageHR"] - df["averageHR"].min()) / (df["averageHR"].max() - df["averageHR"].min())
-    df_diff["speed_kmh_norm"] = (df["speed_kmh"] - df["speed_kmh"].min()) / (df["speed_kmh"].max() - df["speed_kmh"].min())
+df_filtered["Differenz"] = df_filtered["Speed_norm"] - df_filtered["HR_norm"]
 
-    df_diff["difference"] = df_diff["speed_kmh_norm"] - df_diff["averageHR_norm"]
-
-    fig, ax = plt.subplots(figsize=(30, 4))
-    fig.patch.set_facecolor('#4b4c4d')
-    ax.set_facecolor('#4b4c4d')
-
-    ax.plot(
-        df["startTimeLocal"],
-        df_diff["difference"],
-        color="white",
-        linewidth=2
+layout = go.Layout(
+    plot_bgcolor="#4b4c4d",
+    paper_bgcolor="#4b4c4d",
+    font=dict(color="white"),
+    margin=dict(l=20, r=20, t=20, b=40),
+    xaxis=dict(
+        title="",
+        title_standoff=40,
+        showgrid=False,
+        showline=True,
+        linecolor="white",
+        tickcolor="white",
+        ticks="outside",
+        ticklen=6,
+        tickwidth=1,
+        tickfont=dict(color="white")
+    ),
+    yaxis=dict(
+        title="Differenz (Geschwindigkeit - HF)",
+        title_standoff=40,
+        showgrid=False,
+        showline=True,
+        linecolor="white",
+        tickcolor="white",
+        ticks="outside",
+        ticklen=6,
+        tickwidth=1,
+        tickfont=dict(color="white")
     )
+)
 
-    ax.axhline(0, color='white', linestyle='--', linewidth=1)
+fig_diff = go.Figure(layout=layout)
 
-    ax.set_xlabel("")
-    ax.set_ylabel("")
-    ax.set_xticks([])
-    ax.tick_params(colors="white")
+fig_diff.add_trace(go.Scatter(
+    x=df_filtered["startTimeLocal"],
+    y=df_filtered["Differenz"],
+    mode="lines",
+    line=dict(color="white", width=2, dash="solid"),
+    name="Differenz"
+))
 
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-    ax.spines["bottom"].set_color("white")
-    ax.spines["bottom"].set_linewidth(1)
-    ax.spines["left"].set_color("white")
-    ax.spines["left"].set_linewidth(1)
+# fig_diff.add_trace(go.Scatter(
+#     x=df_filtered["startTimeLocal"],
+#     y=[df_filtered["Differenz"].mean()] * len(df_filtered),
+#     mode="lines",
+#     line=dict(color="lightgray", width=1, dash="dash"),
+#     name="Durchschnitt"
+# ))
 
-    st.pyplot(fig)
+with st.expander("Differenz der Normalisierungen", expanded=False):
+    st.plotly_chart(fig_diff, use_container_width=True)
 
 st.write("---")
 
 # ---------- Ergebnis ----------
 
-st.header("Ergebnis")
+st.header("➡️ Ergebnis")
 
 with st.expander("Zusammenfassende Analyse der Herzfrequenz-Geschwindigkeits-Beziehung", expanded=False):
     st.markdown("""
@@ -341,3 +499,6 @@ with st.expander("Zusammenfassende Analyse der Herzfrequenz-Geschwindigkeits-Bez
     Die Korrelation selbst gibt daher **keinen direkten Hinweis auf eine Verbesserung**, sondern beschreibt nur die gleichzeitige Entwicklung zweier Werte pro Lauf. Erst die **Verlaufskurven und Differenzwerte** ermöglichen eine Bewertung der Frage, ob mein Training Wirkung zeigt.
     """)
 
+st.write("---")
+
+st.header("➡️ Plot Twist")

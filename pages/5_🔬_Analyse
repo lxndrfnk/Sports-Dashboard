@@ -1,0 +1,381 @@
+import streamlit as st
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import ast
+import numpy as np
+import plotly.express as px
+
+# ---------- Textbereich ----------
+
+st.title("Effizienzsteigerung im Ausdauertraining: Eine datenbasierte Untersuchung mittels Herzfrequenz-Geschwindigkeits-Beziehung.")
+
+st.write("---")
+
+st.header("Hypothese")
+
+with st.expander("Mit zunehmender Ausdauer sinkt meine Herzfrequenz bei vergleichbarer Geschwindigkeit.", expanded=False):
+
+    st.markdown("""
+                
+    Im Rahmen dieses Projekts werden Trainingsdaten aus meinem Garmin-Account systematisch ausgewertet, um sportliche Entwicklungen nachvollziehbar darzustellen. 
+    Der Schwerpunkt liegt auf dem Zusammenhang zwischen meiner durchschnittlichen Herzfrequenz und meiner Laufgeschwindigkeit (km/h). 
+    Neben Einzelverläufen beider Kennzahlen im Zeitverlauf werden diese zusätzlich normiert dargestellt, um Veränderungen visuell vergleichbar zu machen. 
+    Ein separates Differenzdiagramm zeigt die Abweichung zwischen Herzfrequenz und Geschwindigkeit und ermöglicht Rückschlüsse auf Effizienzsteigerungen. 
+    Ergänzend quantifiziert ein Scatterplot mit Regressionslinie die Korrelation zwischen beiden Größen. 
+    Alle Auswertungen basieren auf echten Laufdaten. Ziel ist es, trainingsbedingte Entwicklungen datenbasiert sichtbar zu machen und die Wirksamkeit meines Ausdauertrainings zu bewerten.
+    """)
+
+st.write("---")
+
+# ---------- Daten vorbereiten ----------
+
+df = pd.read_csv("garmin_activities.csv")
+df["startTimeLocal"] = pd.to_datetime(df["startTimeLocal"], errors="coerce")
+
+if "activityTypeDTO.typeKey" in df.columns:
+    df["typeKey"] = df["activityTypeDTO.typeKey"]
+elif "activityType" in df.columns:
+    df["typeKey"] = df["activityType"].apply(lambda x: ast.literal_eval(x).get("typeKey") if isinstance(x, str) and "{" in x else x)
+else:
+    df["typeKey"] = None
+
+df = df[
+    (df["typeKey"] == "running") &
+    df["averageHR"].notna() &
+    df["duration"].notna() &
+    df["distance"].notna() &
+    (df["duration"] > 0)
+].copy()
+
+df = df.sort_values("startTimeLocal")
+df["distance_km"] = df["distance"] / 1000
+df["duration_h"] = df["duration"] / 3600
+df["speed_kmh"] = df["distance_km"] / df["duration_h"]
+
+# ---------- Scatterplot ----------
+
+with st.expander("Zusammenhang zwischen HF und Geschwindigkeit", expanded=False):
+    
+    fig, ax = plt.subplots(figsize=(10, 5))
+    fig.patch.set_facecolor('#4b4c4d')
+    ax.set_facecolor('#4b4c4d')
+
+    sns.scatterplot(
+        data=df,
+        x="averageHR",
+        y="speed_kmh",
+        ax=ax,
+        color="white"
+    )
+
+    sns.regplot(
+        data=df,
+        x="averageHR",
+        y="speed_kmh",
+        scatter=False,
+        ax=ax,
+        color="#f94144",  
+        line_kws={"linestyle": "--", "linewidth": 1}
+    )
+
+    ax.set_xlabel("")
+    ax.set_ylabel("")
+    ax.tick_params(colors="white")
+    
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+
+    ax.spines["bottom"].set_visible(True)
+    ax.spines["bottom"].set_color("white")
+    ax.spines["bottom"].set_linewidth(1)
+
+    ax.spines["left"].set_visible(True)
+    ax.spines["left"].set_color("white")
+    ax.spines["left"].set_linewidth(1)
+
+
+    st.pyplot(fig)
+
+# ---------- Korrelationskoeffizient ----------
+
+correlation = np.corrcoef(df["averageHR"], df["speed_kmh"])[0, 1]
+
+# ---------- Ampel ----------
+
+if abs(correlation) >= 0.7:
+    color = "#39FF14"  
+elif abs(correlation) >= 0.4:
+    color = "#FFD700"  
+else:
+    color = "#f94144"  
+
+with st.expander("Korrelationskoeffizient anzeigen", expanded=False):
+    st.markdown(
+        f"""
+        <div style='
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            color: white;
+            font-family: Arial, sans-serif;
+        '>
+            <div style='text-align: center;'>
+                <div style='font-size: 20px; margin-bottom: 10px;'>
+                    Korrelation zwischen Herzfrequenz & Geschwindigkeit
+                </div>
+                <div style='font-size: 36px; font-weight: bold; color: {color};'>
+                    {correlation:.2f}
+                </div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+# ---------- Liniendiagramm: Geschwindigkeit ----------
+
+avg_speed = df["speed_kmh"].mean()
+
+with st.expander("Durchschnittliche Geschwindigkeit", expanded=False):
+    fig, ax = plt.subplots(figsize=(30, 4))
+    fig.patch.set_facecolor('#4b4c4d')
+    ax.set_facecolor('#4b4c4d')
+
+    ax.plot(
+        df["startTimeLocal"],
+        df["speed_kmh"],
+        color="#ffffff",
+        linewidth=2,
+        linestyle='dotted'
+    )
+
+    ax.axhline(avg_speed, color='white', linestyle='--', linewidth=1)
+
+    ax.set_yticks([avg_speed])
+    ax.set_yticklabels([f"{avg_speed:.1f} km/h"], color="white")
+
+    ax.tick_params(colors="white")
+    ax.set_xlabel("")
+    ax.set_ylabel("")
+    ax.set_xticks([])  
+
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.spines["bottom"].set_color("white")
+    ax.spines["bottom"].set_linewidth(1)
+    ax.spines["left"].set_color("white")
+    ax.spines["left"].set_linewidth(1)
+
+    st.pyplot(fig)
+
+# ---------- Liniendiagramm: HF ----------
+
+with st.expander("Durchschnittliche Herzfrequenz", expanded=False):
+    avg_hr = df["averageHR"].mean()
+
+    fig, ax = plt.subplots(figsize=(30, 4))
+    fig.patch.set_facecolor('#4b4c4d')
+    ax.set_facecolor('#4b4c4d')
+
+    ax.plot(
+        df["startTimeLocal"],
+        df["averageHR"],
+        color="white",
+        linewidth=2
+    )
+
+    ax.axhline(avg_hr, color='white', linestyle='--', linewidth=1)
+
+    ax.set_yticks([avg_hr])
+    ax.set_yticklabels([f"{avg_hr:.0f} bpm"], color="white")
+
+    ax.tick_params(colors="white")
+    ax.set_xlabel("")
+    ax.set_ylabel("")
+    ax.set_xticks([])
+
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.spines["bottom"].set_color("white")
+    ax.spines["bottom"].set_linewidth(1)
+    ax.spines["left"].set_color("white")
+    ax.spines["left"].set_linewidth(1)
+
+    st.pyplot(fig)
+
+# ---------- Vergleich Geschwindigkeit vs. HF
+
+with st.expander("Vergleich: Herzfrequenz & Geschwindigkeit (Originalwerte)", expanded=False):
+    fig, ax1 = plt.subplots(figsize=(30, 5))
+    fig.patch.set_facecolor('#4b4c4d')
+    ax1.set_facecolor('#4b4c4d')
+
+    ax1.plot(df["startTimeLocal"], df["averageHR"], color="white", linewidth=2, label="Herzfrequenz")
+    ax1.tick_params(axis='y', labelcolor='white')
+    ax1.set_ylabel("Herzfrequenz (bpm)", color="white")
+
+    ax2 = ax1.twinx()
+    ax2.plot(df["startTimeLocal"], df["speed_kmh"], color="white", linestyle="dotted", linewidth=2, label="Geschwindigkeit")
+    ax2.tick_params(axis='y', labelcolor='white')
+    ax2.set_ylabel("Geschwindigkeit (km/h)", color="white")
+
+    ax1.set_xlabel("")
+    ax1.set_xticks([])
+    ax1.tick_params(colors="white")
+    
+    for spine in ax1.spines.values():
+        spine.set_edgecolor("#4b4c4d")
+    for spine in ax2.spines.values():
+        spine.set_edgecolor("#4b4c4d")
+
+    lines_1, labels_1 = ax1.get_legend_handles_labels()
+    lines_2, labels_2 = ax2.get_legend_handles_labels()
+    ax1.legend(lines_1 + lines_2, labels_1 + labels_2, loc="upper right", facecolor='#4b4c4d', labelcolor='white')
+
+    st.pyplot(fig)
+
+# ---------- Normalisiertes Liniendiagramm ----------
+
+with st.expander("Normalisiertes Liniendiagramm", expanded=False):
+    
+    df_norm = df.copy()
+    df_norm["averageHR_norm"] = (df["averageHR"] - df["averageHR"].min()) / (df["averageHR"].max() - df["averageHR"].min())
+    df_norm["speed_kmh_norm"] = (df["speed_kmh"] - df["speed_kmh"].min()) / (df["speed_kmh"].max() - df["speed_kmh"].min())
+
+    fig, ax = plt.subplots(figsize=(30, 4))
+    fig.patch.set_facecolor('#4b4c4d')
+    ax.set_facecolor('#4b4c4d')
+
+    ax.plot(
+        df["startTimeLocal"],
+        df_norm["averageHR_norm"],
+        label="HF (normalisiert)",
+        color="white",
+        linewidth=2
+    )
+    ax.plot(
+        df["startTimeLocal"],
+        df_norm["speed_kmh_norm"],
+        label="Geschwindigkeit (normalisiert)",
+        color="white",
+        linewidth=2,
+        linestyle="dotted"
+    )
+
+    ax.legend(["Herzfrequenz", "Geschwindigkeit"], loc="upper right", facecolor='#4b4c4d', labelcolor='white')
+
+    ax.set_xlabel("")
+    ax.set_ylabel("")
+    ax.set_xticks([])
+    ax.tick_params(colors="white")
+
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.spines["bottom"].set_color("white")
+    ax.spines["bottom"].set_linewidth(1)
+    ax.spines["left"].set_color("white")
+    ax.spines["left"].set_linewidth(1)
+
+    st.pyplot(fig)
+
+# ---------- Differenz der Normalisierungen ----------
+
+with st.expander("Differenz zwischen normalisierter Geschwindigkeit und Herzfrequenz", expanded=False):
+    
+    df_diff = df.copy()
+    df_diff["averageHR_norm"] = (df["averageHR"] - df["averageHR"].min()) / (df["averageHR"].max() - df["averageHR"].min())
+    df_diff["speed_kmh_norm"] = (df["speed_kmh"] - df["speed_kmh"].min()) / (df["speed_kmh"].max() - df["speed_kmh"].min())
+
+    df_diff["difference"] = df_diff["speed_kmh_norm"] - df_diff["averageHR_norm"]
+
+    fig, ax = plt.subplots(figsize=(30, 4))
+    fig.patch.set_facecolor('#4b4c4d')
+    ax.set_facecolor('#4b4c4d')
+
+    ax.plot(
+        df["startTimeLocal"],
+        df_diff["difference"],
+        color="white",
+        linewidth=2
+    )
+
+    ax.axhline(0, color='white', linestyle='--', linewidth=1)
+
+    ax.set_xlabel("")
+    ax.set_ylabel("")
+    ax.set_xticks([])
+    ax.tick_params(colors="white")
+
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.spines["bottom"].set_color("white")
+    ax.spines["bottom"].set_linewidth(1)
+    ax.spines["left"].set_color("white")
+    ax.spines["left"].set_linewidth(1)
+
+    st.pyplot(fig)
+
+st.write("---")
+
+# ---------- Ergebnis ----------
+
+st.header("Ergebnis")
+
+with st.expander("Zusammenfassende Analyse der Herzfrequenz-Geschwindigkeits-Beziehung", expanded=False):
+    st.markdown("""
+
+    Im Zentrum dieser Untersuchung steht die Frage, ob sich durch mein Lauftraining eine Verbesserung der Ausdauerleistung erkennen lässt – messbar durch den Zusammenhang zwischen Herzfrequenz und Laufgeschwindigkeit. Zur Beantwortung wurden ausschließlich Laufaktivitäten aus meinem Garmin-Profil herangezogen und systematisch analysiert.
+
+    Die grundlegende Annahme war: **Wenn sich meine Ausdauer verbessert, sollte ich bei gleicher oder höherer Geschwindigkeit mit einer niedrigeren Herzfrequenz laufen können.** Erwartet hätte man in diesem Fall eine **negative Korrelation** zwischen den beiden Größen.
+
+    Die tatsächliche Analyse ergibt jedoch eine **positive Korrelation von +0.4** zwischen durchschnittlicher Herzfrequenz und Geschwindigkeit – ein durchaus plausibles Ergebnis, das sich mit typischem Trainingsverhalten erklären lässt: Intensivere Läufe führen naturgemäß zu einer höheren Geschwindigkeit und gleichzeitig zu einer höheren Herzfrequenz. Das bedeutet: **Die Korrelation spiegelt vor allem das Verhältnis zwischen Trainingsintensität und körperlicher Reaktion wider – nicht zwingend den Trainingseffekt.**
+
+    Um den **Trainingseffekt** dennoch sichtbar zu machen, wurden weitere Visualisierungen eingesetzt:
+    - Ein **Liniendiagramm mit Zeitverlauf** zeigt getrennt die Entwicklung der durchschnittlichen Geschwindigkeit und Herzfrequenz über die letzten Monate.
+    - Ein **normalisiertes Liniendiagramm** skaliert beide Größen auf denselben Wertebereich (0–1) und ermöglicht so einen direkten visuellen Vergleich der Trends.
+    - Ein **Differenzdiagramm** stellt die Lücke zwischen der Entwicklung von HF und Geschwindigkeit dar – hier lassen sich Fortschritte durch abnehmende Differenzwerte oder eine Verlagerung der Kurve erkennen.
+
+    Insgesamt lässt sich aus den Verlaufsdiagrammen eine **tendenzielle Verbesserung** ablesen: Während die Geschwindigkeit leicht zunimmt, bleibt die Herzfrequenz im Mittel stabil oder sinkt leicht – ein Indiz für wachsende Effizienz im Training.
+
+    Die Korrelation selbst gibt daher **keinen direkten Hinweis auf eine Verbesserung**, sondern beschreibt nur die gleichzeitige Entwicklung zweier Werte pro Lauf. Erst die **Verlaufskurven und Differenzwerte** ermöglichen eine Bewertung der Frage, ob mein Training Wirkung zeigt.
+    """)
+
+# ---------- Test ----------
+
+# Sicherstellen, dass Daten vollständig sind
+df = df.dropna(subset=["averageHR", "speed_kmh", "startTimeLocal"])
+
+# Normalisierung
+df["hr_normalized"] = (df["averageHR"] - df["averageHR"].min()) / (df["averageHR"].max() - df["averageHR"].min())
+df["speed_kmh_normalized"] = (df["speed_kmh"] - df["speed_kmh"].min()) / (df["speed_kmh"].max() - df["speed_kmh"].min())
+
+# Differenz berechnen
+df["diff"] = df["speed_kmh_normalized"] - df["hr_normalized"]
+
+# Interaktives Diagramm mit Plotly
+with st.expander("Differenz zwischen normalisierter Geschwindigkeit und Herzfrequenz", expanded=False):
+
+    fig = px.line(
+        df,
+        x="startTimeLocal",
+        y="diff",
+        labels={"startTimeLocal": "", "diff": ""},
+        title=None
+    )
+
+    fig.update_layout(
+        plot_bgcolor='#4b4c4d',
+        paper_bgcolor='#4b4c4d',
+        font=dict(color="white"),
+        xaxis=dict(showgrid=False),
+        yaxis=dict(showgrid=False),
+        margin=dict(l=10, r=10, t=10, b=10)
+    )
+
+    fig.update_traces(line_color="white")
+
+    st.plotly_chart(fig, use_container_width=True)
+
+
