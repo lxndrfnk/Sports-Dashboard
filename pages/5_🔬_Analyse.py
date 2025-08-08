@@ -456,7 +456,6 @@ layout = go.Layout(
     yaxis=dict(
         title="Differenz (Geschwindigkeit - HF)",
         title_standoff=40,
-        showgrid=False,
         showline=True,
         linecolor="white",
         tickcolor="white",
@@ -464,9 +463,12 @@ layout = go.Layout(
         ticklen=6,
         tickwidth=1,
         tickfont=dict(color="white"),
-        zeroline=False,
-        tickvals=[-1, -0.5, 0.5, 1],
-        ticktext=["-1", "-0.5", "0.5", "1"]
+        range=[-1, 1],
+        tickmode="array",      
+        tickvals=[-1, 0, 1],          
+        zeroline=True,         
+        zerolinecolor="white", 
+        zerolinewidth=1
     )
 )
 
@@ -502,18 +504,19 @@ with st.expander("Zusammenfassende Analyse der Herzfrequenz-Geschwindigkeits-Bez
 
     Im Zentrum dieser Untersuchung steht die Frage, ob sich durch mein Lauftraining eine Verbesserung der Ausdauerleistung erkennen lässt – messbar durch den Zusammenhang zwischen Herzfrequenz und Laufgeschwindigkeit. Zur Beantwortung wurden ausschließlich Laufaktivitäten aus meinem Garmin-Profil herangezogen und systematisch analysiert.
 
-    Die grundlegende Annahme war: **Wenn sich meine Ausdauer verbessert, sollte ich bei gleicher oder höherer Geschwindigkeit mit einer niedrigeren Herzfrequenz laufen können.** Erwartet hätte man in diesem Fall eine **negative Korrelation** zwischen den beiden Größen.
+    Die grundlegende Annahme war: Wenn sich meine Ausdauer verbessert, sollte ich bei gleicher oder höherer Geschwindigkeit mit einer niedrigeren Herzfrequenz laufen können.** Erwartet hätte man in diesem Fall eine negative Korrelation zwischen den beiden Größen.
 
-    Die tatsächliche Analyse ergibt jedoch eine **positive Korrelation von +0.4** zwischen durchschnittlicher Herzfrequenz und Geschwindigkeit – ein durchaus plausibles Ergebnis, das sich mit typischem Trainingsverhalten erklären lässt: Intensivere Läufe führen naturgemäß zu einer höheren Geschwindigkeit und gleichzeitig zu einer höheren Herzfrequenz. Das bedeutet: **Die Korrelation spiegelt vor allem das Verhältnis zwischen Trainingsintensität und körperlicher Reaktion wider – nicht zwingend den Trainingseffekt.**
+    Die tatsächliche Analyse ergibt jedoch eine positive Korrelation von +0.4 zwischen durchschnittlicher Herzfrequenz und Geschwindigkeit – ein durchaus plausibles Ergebnis, das sich mit typischem Trainingsverhalten erklären lässt: Intensivere Läufe führen naturgemäß zu einer höheren Geschwindigkeit und gleichzeitig zu einer höheren Herzfrequenz. Das bedeutet: Die Korrelation spiegelt vor allem das Verhältnis zwischen Trainingsintensität und körperlicher Reaktion wider – nicht zwingend den Trainingseffekt.
 
-    Um den **Trainingseffekt** dennoch sichtbar zu machen, wurden weitere Visualisierungen eingesetzt:
-    - Ein **Liniendiagramm mit Zeitverlauf** zeigt getrennt die Entwicklung der durchschnittlichen Geschwindigkeit und Herzfrequenz über die letzten Monate.
-    - Ein **normalisiertes Liniendiagramm** skaliert beide Größen auf denselben Wertebereich (0–1) und ermöglicht so einen direkten visuellen Vergleich der Trends.
-    - Ein **Differenzdiagramm** stellt die Lücke zwischen der Entwicklung von HF und Geschwindigkeit dar – hier lassen sich Fortschritte durch abnehmende Differenzwerte oder eine Verlagerung der Kurve erkennen.
-
+    Um den Trainingseffekt dennoch sichtbar zu machen, wurden weitere Visualisierungen eingesetzt:
+     ```
+    • Ein Liniendiagramm mit Zeitverlauf zeigt getrennt die Entwicklung der durchschnittlichen Geschwindigkeit und Herzfrequenz über die letzten Monate.
+    • Ein normalisiertes Liniendiagramm skaliert beide Größen auf denselben Wertebereich (0–1) und ermöglicht so einen direkten visuellen Vergleich der Trends.
+    • Ein Differenzdiagramm** stellt die Lücke zwischen der Entwicklung von HF und Geschwindigkeit dar – hier lassen sich Fortschritte durch abnehmende Differenzwerte oder eine Verlagerung der Kurve erkennen.
+     ```
     Insgesamt lässt sich aus den Verlaufsdiagrammen eine **tendenzielle Verbesserung** ablesen: Während die Geschwindigkeit leicht zunimmt, bleibt die Herzfrequenz im Mittel stabil oder sinkt leicht – ein Indiz für wachsende Effizienz im Training.
 
-    Die Korrelation selbst gibt daher **keinen direkten Hinweis auf eine Verbesserung**, sondern beschreibt nur die gleichzeitige Entwicklung zweier Werte pro Lauf. Erst die **Verlaufskurven und Differenzwerte** ermöglichen eine Bewertung der Frage, ob mein Training Wirkung zeigt.
+    Die Korrelation selbst gibt daher keinen direkten Hinweis auf eine Verbesserung, sondern beschreibt nur die gleichzeitige Entwicklung zweier Werte pro Lauf. Erst die **Verlaufskurven und Differenzwerte** ermöglichen eine Bewertung der Frage, ob mein Training Wirkung zeigt.
     """)
 
 st.write("---")
@@ -523,7 +526,7 @@ st.header("➡️ Plot Twist")
 with st.expander("Hinweis zur Dateninterpretation", expanded=False):
     st.markdown("""
 
-    Ab dem ***12. Januar 2025*** habe ich von der Herzfrequenzmessung am Handgelenk auf einen Brustgurt umgestellt. Dadurch sind die Messwerte seitdem deutlich präziser und Schwankungen in der Differenzkurve können auch auf diese verbesserte Datenerfassung zurückzuführen sein.
+    Ab dem 12. Januar 2025 habe ich von der Herzfrequenzmessung am Handgelenk auf einen Brustgurt umgestellt. Dadurch sind die Messwerte seitdem deutlich präziser und Schwankungen in der Differenzkurve können auch auf diese verbesserte Datenerfassung zurückzuführen sein.
 
     Dieser Umstand zeigt, dass man bei der Analyse und Interpretation von Trainingsdaten immer den Kontext beachten sollte – Veränderungen in der Ausrüstung, den Messmethoden oder anderen Rahmenbedingungen können die Aussagekraft stark beeinflussen.
 
