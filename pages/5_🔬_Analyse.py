@@ -405,7 +405,8 @@ layout = go.Layout(
         ticks="outside",
         ticklen=6,
         tickwidth=1,
-        tickfont=dict(color="white")
+        tickfont=dict(color="white"),
+        zeroline=False,
     )
 )
 
@@ -449,7 +450,8 @@ layout = go.Layout(
         ticks="outside",
         ticklen=6,
         tickwidth=1,
-        tickfont=dict(color="white")
+        tickfont=dict(color="white"),
+        zeroline=False
     ),
     yaxis=dict(
         title="Differenz (Geschwindigkeit - HF)",
@@ -461,7 +463,10 @@ layout = go.Layout(
         ticks="outside",
         ticklen=6,
         tickwidth=1,
-        tickfont=dict(color="white")
+        tickfont=dict(color="white"),
+        zeroline=False,
+        tickvals=[-1, -0.5, 0.5, 1],
+        ticktext=["-1", "-0.5", "0.5", "1"]
     )
 )
 
@@ -514,3 +519,13 @@ with st.expander("Zusammenfassende Analyse der Herzfrequenz-Geschwindigkeits-Bez
 st.write("---")
 
 st.header("➡️ Plot Twist")
+
+with st.expander("Hinweis zur Dateninterpretation", expanded=False):
+    st.markdown("""
+
+    Ab dem ***12. Januar 2025*** habe ich von der Herzfrequenzmessung am Handgelenk auf einen Brustgurt umgestellt. Dadurch sind die Messwerte seitdem deutlich präziser und Schwankungen in der Differenzkurve können auch auf diese verbesserte Datenerfassung zurückzuführen sein.
+
+    Dieser Umstand zeigt, dass man bei der Analyse und Interpretation von Trainingsdaten immer den Kontext beachten sollte – Veränderungen in der Ausrüstung, den Messmethoden oder anderen Rahmenbedingungen können die Aussagekraft stark beeinflussen.
+
+    Jetzt bleibt spannend zu sehen, wie sich die Werte in Zukunft entwickeln – und ob mein Training den gewünschten Effekt bringt.
+    """)

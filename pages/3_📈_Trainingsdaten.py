@@ -59,7 +59,7 @@ def seconds_to_pace(seconds_per_unit):
 
 # ---------- Trainingsdaten ----------
 
-st.title("Trainingsdaten")
+st.title("📈 Trainingsdaten")
 
 st.markdown("---")
 
@@ -245,7 +245,7 @@ fig.add_trace(go.Bar(
     text=[f"{int(val)}" for val in by_year.values],
     textposition='inside',
     insidetextanchor='middle',
-    width=0.4
+    width=0.2
 ))
 
 fig.update_layout(
@@ -262,7 +262,7 @@ fig.update_layout(
         tickcolor="white",
         ticks="outside",
         tickmode="array",
-         tickvals=[str(year) for year in by_year.index]
+        tickvals=[str(year) for year in by_year.index]
     ),
     yaxis=dict(
         showline=True,
@@ -273,7 +273,9 @@ fig.update_layout(
         tickfont=dict(color="white"),
         showgrid=True,
         gridcolor="white",
-        tickformat=".0f"
+        tickformat=".0f",
+        zeroline=False,
+        zerolinecolor="white"
     ),
     showlegend=False
 )
@@ -286,63 +288,236 @@ with st.expander("Diagramm anzeigen", expanded=False):
 
 # ---------- Diagramm: Kilometer pro Monat ----------
 
-ddf = pd.read_csv("garmin_activities.csv")
 df["startTimeLocal"] = pd.to_datetime(df["startTimeLocal"], errors="coerce")
 
 if "activityTypeDTO.typeKey" in df.columns:
     df["typeKey"] = df["activityTypeDTO.typeKey"]
 elif "activityType" in df.columns:
-    import ast
-    df["typeKey"] = df["activityType"].apply(lambda x: ast.literal_eval(x).get("typeKey") if isinstance(x, str) and "{" in x else x)
-else:
-    df["typeKey"] = None
+    df["typeKey"] = df["activityType"].apply(
+        lambda x: ast.literal_eval(x).get("typeKey") if isinstance(x, str) and "{" in x else x
+    )
 
-df = df[df["typeKey"] == "running"]
+df_runs = df[df["typeKey"] == "running"].dropna(subset=["startTimeLocal", "distance"]).copy()
 
-df["month_dt"] = df["startTimeLocal"].dt.to_period("M").dt.to_timestamp()
-by_month = df.groupby("month_dt")["distance"].sum() / 1000  
-by_month = by_month.sort_index()
+df_runs["month_dt"] = df_runs["startTimeLocal"].dt.to_period("M").dt.to_timestamp()
+by_month = (df_runs.groupby("month_dt")["distance"].sum() / 1000).sort_index()
+
+
 by_month_last12 = by_month.tail(12)
 
-
-month_labels = by_month_last12.index.strftime("%m") 
-month_names = {
-    '01': 'Jan.', '02': 'Feb.', '03': 'Mär.', '04': 'Apr.', '05': 'Mai', '06': 'Jun.',
-    '07': 'Jul.', '08': 'Aug.', '09': 'Sep.', '10': 'Okt.', '11': 'Nov.', '12': 'Dez.'
+month_nums = by_month_last12.index.strftime("%m")
+month_map = {
+    "01": "Jan.", "02": "Feb.", "03": "Mär.", "04": "Apr.", "05": "Mai", "06": "Jun.",
+    "07": "Jul.", "08": "Aug.", "09": "Sep.", "10": "Okt.", "11": "Nov.", "12": "Dez."
 }
-month_labels = [month_names[m] for m in month_labels]
+month_labels = [month_map[m] for m in month_nums]
 
 st.header("🏃 Kilometer pro Monat (letzte 12 Monate)")
 
-fig, ax = plt.subplots(figsize=(10, 4))
-fig.patch.set_facecolor('#4b4c4d')   
-ax.set_facecolor('#4b4c4d')
+fig_m = go.Figure()
 
-bars = ax.bar(
-    month_labels,
-    by_month_last12.values,
-    color="#ffffff"
+fig_m.add_trace(go.Bar(
+    x=month_labels,
+    y=by_month_last12.values,
+    marker_color="white",
+    text=[f"{int(round(v))}" for v in by_month_last12.values],  
+    textposition="inside",
+    insidetextanchor="middle",
+    width=0.4
+))
+
+fig_m.update_layout(
+    plot_bgcolor="#4b4c4d",
+    paper_bgcolor="#4b4c4d",
+    font=dict(color="white"),
+    margin=dict(l=40, r=20, t=30, b=40),
+    xaxis=dict(
+        showline=True,
+        linecolor="white",
+        tickfont=dict(color="white"),
+        ticklen=6,
+        tickwidth=1,
+        tickcolor="white",
+        ticks="outside",
+        tickmode="array",
+        tickvals=month_labels
+    ),
+    yaxis=dict(
+        showline=True,
+        showticklabels=True,
+        ticklen=6,
+        tickwidth=1,
+        tickcolor="white",
+        tickfont=dict(color="white"),
+        showgrid=True,
+        gridcolor="white",
+        tickformat=".0f",
+        zeroline=False
+    ),
+    showlegend=False
 )
 
-ax.tick_params(colors="white")
-ax.set_xlabel("")
-ax.set_ylabel("")
-ax.set_yticks([])
+fig_m.update_xaxes(linecolor="white")
+fig_m.update_yaxes(linecolor="white")
 
-for spine in ax.spines.values():
-    spine.set_visible(True)
-    spine.set_edgecolor("#f94144")
-    spine.set_linewidth(2)
+with st.expander("Diagramm anzeigen", expanded=False):
+    st.plotly_chart(fig_m, use_container_width=True)
 
-for bar in bars:
-    height = bar.get_height()
-    ax.text(
-        bar.get_x() + bar.get_width() / 2,
-        height / 2,
-        f"{height:.0f}",
-        ha='center', va='center',
-        color='black',
-        fontsize=10
+# ---------- Diagramm: Kilometer pro Jahr (Rad) ----------
+
+import ast
+
+st.header("🚴 Kilometer pro Jahr")
+
+# Frisch laden, damit kein vorheriger Filter (z. B. running) stört
+df_all = pd.read_csv("garmin_activities.csv")
+df_all["startTimeLocal"] = pd.to_datetime(df_all["startTimeLocal"], errors="coerce")
+
+# typeKey zuverlässig ermitteln
+if "activityTypeDTO.typeKey" in df_all.columns:
+    df_all["typeKey"] = df_all["activityTypeDTO.typeKey"]
+elif "activityType" in df_all.columns:
+    df_all["typeKey"] = df_all["activityType"].apply(
+        lambda x: ast.literal_eval(x).get("typeKey") if isinstance(x, str) and "{" in x else x
+    )
+else:
+    df_all["typeKey"] = None
+
+# Radfahren filtern (ggf. weitere Varianten ergänzen)
+bike_keys = ["cycling"]  # bei Bedarf: "mountain_biking", "virtual_ride", ...
+df_bike = df_all[df_all["typeKey"].isin(bike_keys)].dropna(subset=["startTimeLocal", "distance"]).copy()
+
+if df_bike.empty:
+    types = ", ".join(sorted(map(str, df_all["typeKey"].dropna().unique())))
+    st.info(f"Keine Radfahr-Daten gefunden. Verfügbare Typen in der CSV: {types}")
+else:
+    # km pro Jahr
+    by_year_bike = (df_bike.groupby(df_bike["startTimeLocal"].dt.year)["distance"].sum() / 1000).sort_index()
+
+    fig_bike_year = go.Figure()
+    fig_bike_year.add_trace(go.Bar(
+        x=by_year_bike.index.astype(str),
+        y=by_year_bike.values,
+        marker_color="white",
+        text=[f"{int(round(v))}" for v in by_year_bike.values],
+        textposition='inside',
+        insidetextanchor='middle',
+        width=0.2
+    ))
+
+    fig_bike_year.update_layout(
+        plot_bgcolor="#4b4c4d",
+        paper_bgcolor="#4b4c4d",
+        font=dict(color="white"),
+        margin=dict(l=40, r=20, t=30, b=40),
+        xaxis=dict(
+            showline=True,
+            linecolor="white",
+            tickfont=dict(color="white"),
+            ticklen=6,
+            tickwidth=1,
+            tickcolor="white",
+            ticks="outside",
+            tickmode="array",
+            tickvals=[str(year) for year in by_year_bike.index]
+        ),
+        yaxis=dict(
+            showline=True,
+            showticklabels=True,
+            ticklen=6,
+            tickwidth=1,
+            tickcolor="white",
+            tickfont=dict(color="white"),
+            showgrid=True,
+            gridcolor="white",
+            tickformat=".0f",
+            zeroline=False
+        ),
+        showlegend=False
     )
 
-st.pyplot(fig)
+    fig_bike_year.update_xaxes(linecolor="white")
+    fig_bike_year.update_yaxes(linecolor="white")
+
+    with st.expander("Diagramm anzeigen", expanded=False):
+        st.plotly_chart(fig_bike_year, use_container_width=True)
+
+# ---------- Diagramm: Kilometer pro Monat (Rad, letzte 12 Monate) ----------
+
+st.header("🚴 Kilometer pro Monat (letzte 12 Monate)")
+
+if df_bike.empty:
+    st.info("Keine Radfahr-Daten für die Monatsansicht gefunden.")
+else:
+    # Monatliche Summen (km)
+    bike_month = (
+        df_bike
+        .assign(month_dt=df_bike["startTimeLocal"].dt.to_period("M"))
+        .groupby("month_dt")["distance"].sum()
+        .div(1000)
+        .sort_index()
+    )
+
+    # Exakt die letzten 12 Monate als Period-Range erzwingen (inkl. Monate mit 0 km)
+    last_month = df_bike["startTimeLocal"].max().to_period("M")
+    months_range = pd.period_range(last_month - 11, last_month, freq="M")
+    bike_month_12 = (
+        bike_month.reindex(months_range, fill_value=0.0)
+        .astype(float)
+    )
+
+    # Labels wie „Jan., Feb., …“ bauen (kategoriale Achse = breite Balken)
+    month_map = {
+        1: "Jan.", 2: "Feb.", 3: "Mär.", 4: "Apr.", 5: "Mai", 6: "Jun.",
+        7: "Jul.", 8: "Aug.", 9: "Sep.", 10: "Okt.", 11: "Nov.", 12: "Dez."
+    }
+    x_labels = [month_map[p.month] for p in bike_month_12.index]
+
+    fig_bike_month = go.Figure()
+    fig_bike_month.add_trace(go.Bar(
+        x=x_labels,                                 # kategorial → saubere Balkenbreite
+        y=bike_month_12.values,
+        marker_color="white",
+        text=[f"{int(round(v))}" for v in bike_month_12.values],
+        textposition="inside",
+        insidetextanchor="middle",
+        width=0.4                                   # Breite der Balken
+    ))
+
+    fig_bike_month.update_layout(
+        plot_bgcolor="#4b4c4d",
+        paper_bgcolor="#4b4c4d",
+        font=dict(color="white"),
+        margin=dict(l=40, r=20, t=30, b=40),
+        xaxis=dict(
+            showline=True,
+            linecolor="white",
+            tickfont=dict(color="white"),
+            ticklen=6,
+            tickwidth=1,
+            tickcolor="white",
+            ticks="outside",
+            tickmode="array",
+            tickvals=x_labels                        # genau diese 12 Labels
+        ),
+        yaxis=dict(
+            showline=True,
+            showticklabels=True,
+            ticklen=6,
+            tickwidth=1,
+            tickcolor="white",
+            tickfont=dict(color="white"),
+            showgrid=True,
+            gridcolor="white",
+            tickformat=".0f",
+            zeroline=False
+        ),
+        showlegend=False
+    )
+
+    fig_bike_month.update_xaxes(linecolor="white")
+    fig_bike_month.update_yaxes(linecolor="white")
+
+    with st.expander("Diagramm anzeigen", expanded=False):
+        st.plotly_chart(fig_bike_month, use_container_width=True)
+
