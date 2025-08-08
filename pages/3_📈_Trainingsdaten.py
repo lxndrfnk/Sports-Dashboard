@@ -449,7 +449,6 @@ st.header("🚴 Kilometer pro Monat (letzte 12 Monate)")
 if df_bike.empty:
     st.info("Keine Radfahr-Daten für die Monatsansicht gefunden.")
 else:
-    # Monatliche Summen (km)
     bike_month = (
         df_bike
         .assign(month_dt=df_bike["startTimeLocal"].dt.to_period("M"))
@@ -458,7 +457,6 @@ else:
         .sort_index()
     )
 
-    # Exakt die letzten 12 Monate als Period-Range erzwingen (inkl. Monate mit 0 km)
     last_month = df_bike["startTimeLocal"].max().to_period("M")
     months_range = pd.period_range(last_month - 11, last_month, freq="M")
     bike_month_12 = (
@@ -466,7 +464,6 @@ else:
         .astype(float)
     )
 
-    # Labels wie „Jan., Feb., …“ bauen (kategoriale Achse = breite Balken)
     month_map = {
         1: "Jan.", 2: "Feb.", 3: "Mär.", 4: "Apr.", 5: "Mai", 6: "Jun.",
         7: "Jul.", 8: "Aug.", 9: "Sep.", 10: "Okt.", 11: "Nov.", 12: "Dez."
@@ -475,13 +472,13 @@ else:
 
     fig_bike_month = go.Figure()
     fig_bike_month.add_trace(go.Bar(
-        x=x_labels,                                 # kategorial → saubere Balkenbreite
+        x=x_labels,                               
         y=bike_month_12.values,
         marker_color="white",
         text=[f"{int(round(v))}" for v in bike_month_12.values],
         textposition="inside",
         insidetextanchor="middle",
-        width=0.4                                   # Breite der Balken
+        width=0.4                                   
     ))
 
     fig_bike_month.update_layout(
@@ -498,7 +495,7 @@ else:
             tickcolor="white",
             ticks="outside",
             tickmode="array",
-            tickvals=x_labels                        # genau diese 12 Labels
+            tickvals=x_labels                        
         ),
         yaxis=dict(
             showline=True,
