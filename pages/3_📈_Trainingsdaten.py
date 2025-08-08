@@ -121,7 +121,7 @@ st.markdown("""
     <style>
     .metric-card {
         border: 2px solid #ffffff33;
-        border-radius: 0px;
+        border-radius: 20px;
         padding: 20px;
         text-align: center;
         font-family: 'Arial', sans-serif;
