@@ -123,7 +123,7 @@ else:
     # Geschwindigkeit (km/h)
     dfR["speed_kmh"] = (dfR["distance"] / 1000) / (dfR["duration"] / 3600)
 
-    # Min-Max-Normalisierung
+    # Min-Max-Normalisierung (auf den gefilterten Daten)
     def minmax(s):
         lo, hi = s.min(), s.max()
         return (s - lo) / (hi - lo) if hi > lo else s * 0 + 0.5
@@ -134,7 +134,7 @@ else:
     # Effizienz = norm. Speed − norm. HF
     dfR["efficiency"] = dfR["Speed_norm"] - dfR["HR_norm"]
 
-    # Tagesmittel
+    # Tagesmittel NUR für Trainingstage (keine Lücken auffüllen)
     df_daily = (
         dfR.groupby(dfR["startTimeLocal"].dt.date)["efficiency"]
            .mean()
@@ -145,48 +145,45 @@ else:
     df_daily = df_daily.sort_values("date")
 
     if len(df_daily) < 3:
-        st.info("Für eine Trendlinie werden mindestens 3 Tage mit Daten benötigt.")
+        st.info("Für eine Trendlinie werden mindestens 3 unterschiedliche Trainingstage benötigt.")
     else:
-        # --- Lineare Regression ---
-        x = (df_daily["date"] - df_daily["date"].min()).dt.days.to_numpy()
-        y = df_daily["eff_daily"].to_numpy()
-        b1, b0 = np.polyfit(x, y, deg=1)
+        # Regression NUR über Trainingstage
+        x_days = (df_daily["date"] - df_daily["date"].min()).dt.days.to_numpy()
+        y_vals = df_daily["eff_daily"].to_numpy()
+        slope, intercept = np.polyfit(x_days, y_vals, deg=1)
 
-        # --- Zukunftsprognose: 30 Tage weiter ---
-        future_days = 30
-        future_x = np.arange(x.min(), x.max() + future_days + 1)
-        future_dates = [df_daily["date"].min() + timedelta(days=int(d)) for d in future_x]
-        y_hat = b1 * future_x + b0
+        # Trendwerte ausschließlich auf den vorhandenen Trainingstagen
+        y_trend_on_training_days = slope * x_days + intercept
 
-        # --- Plot ---
+        # Plot
         fig = go.Figure()
 
-        # Originaldaten
+        # 1) Tageswerte (weiß)
         fig.add_trace(go.Scatter(
             x=df_daily["date"],
             y=df_daily["eff_daily"],
-            mode="lines",
+            mode="lines+markers",
             line=dict(color="white", width=2),
             marker=dict(color="white", size=6),
-            name=""
+            name="Effizienz (Trainingstage)"
         ))
 
-        # Prognose-Trendlinie
+        # 2) Trend NUR auf Trainingstagen (rot gestrichelt)
         fig.add_trace(go.Scatter(
-            x=future_dates,
-            y=y_hat,
+            x=df_daily["date"],
+            y=y_trend_on_training_days,
             mode="lines",
             line=dict(color="#f94144", width=2, dash="dash"),
-            name=""
+            name="Trend (Trainingstage)"
         ))
 
-        # # Gestrichelte Nulllinie
-        # fig.add_shape(
-        #     type="line",
-        #     xref="paper", x0=0, x1=1,
-        #     yref="y",     y0=0, y1=0,
-        #     line=dict(color="white", width=1, dash="dash")
-        # )
+        # Gestrichelte 0-Linie (über gesamte Breite)
+        fig.add_shape(
+            type="line",
+            xref="paper", x0=0, x1=1,
+            yref="y",     y0=0, y1=0,
+            line=dict(color="white", width=1, dash="dash")
+        )
 
         fig.update_layout(
             plot_bgcolor="#4b4c4d",
@@ -207,12 +204,12 @@ else:
                 tickfont=dict(color="white"),
                 ticklen=6, tickwidth=1, tickcolor="white", ticks="outside",
                 showgrid=True, gridcolor="white",
-                zeroline=False,
                 range=[-1, 1],
-                tickvals=[-1, -0.5, 0, 0.5, 1]
+                tickvals=[-1, -0.5, 0, 0.5, 1],
+                zeroline=False
             ),
             showlegend=False
         )
 
-        with st.expander("Diagramm anzeigen", expanded=False):
+        with st.expander("Effizienz-Trend (tageweise, nur Trainingstage) anzeigen", expanded=False):
             st.plotly_chart(fig, use_container_width=True)
