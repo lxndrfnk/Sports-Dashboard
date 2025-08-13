@@ -30,8 +30,6 @@ st.markdown("""
 
 # ---------- Textblock ----------
 
-import streamlit as st
-
 st.title("🏁 Willkommen in meinem Sports-Dashboard")
 
 st.markdown("""
@@ -51,8 +49,6 @@ Das Projekt wurde im Rahmen einer Fortbildung zu **Big Data & Künstlicher Intel
 # ---------- Garmin Daten laden ----------
 
 df = pd.read_csv("garmin_activities.csv")
-
-# Prüfe Spalte
 
 if "activityTypeDTO.typeKey" in df.columns:
     activity_col = "activityTypeDTO.typeKey"
@@ -87,5 +83,3 @@ def seconds_to_pace(seconds_per_unit):
     m = int(seconds_per_unit // 60)
     s = int(seconds_per_unit % 60)
     return f"{m:02d}:{s:02d}"
-
-# ---------- Sidebar ----------

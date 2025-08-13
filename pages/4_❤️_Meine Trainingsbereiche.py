@@ -5,7 +5,9 @@ import datetime
 import matplotlib.pyplot as plt
 from datetime import date
 
+# --------------------------------
 # ---------- Schriftart ----------
+# --------------------------------
 
 st.markdown("""
     <style>
@@ -16,6 +18,10 @@ st.markdown("""
         }
     </style>
 """, unsafe_allow_html=True)
+
+# --------------------------
+# ---------- Tabs ----------
+# --------------------------
 
 st.title("Meine Trainingsbereiche")
 

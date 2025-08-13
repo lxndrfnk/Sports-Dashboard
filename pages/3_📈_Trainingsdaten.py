@@ -6,8 +6,11 @@ import matplotlib.pyplot as plt
 from datetime import date
 from matplotlib.patches import FancyBboxPatch
 import plotly.graph_objects as go
+from datetime import timedelta
 
+# --------------------------------
 # ---------- Schriftart ----------
+# --------------------------------
 
 st.markdown("""
     <style>
@@ -19,7 +22,9 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# ----------------------------------------
 # ---------- Garmin Daten laden ----------
+# ----------------------------------------
 
 df = pd.read_csv("garmin_activities.csv")
 
@@ -57,7 +62,9 @@ def seconds_to_pace(seconds_per_unit):
     s = int(seconds_per_unit % 60)
     return f"{m:02d}:{s:02d}"
 
+# ------------------------------------
 # ---------- Trainingsdaten ----------
+# ------------------------------------
 
 st.title("📈 Trainingsdaten")
 
@@ -97,8 +104,6 @@ run_count  = df_filtered[df_filtered["typeKey"] == "running"].shape[0]
 swim_distance_km = df_filtered[df_filtered["typeKey"] == "lap_swimming"]["distance"].sum() / 1000
 bike_distance_km = df_filtered[df_filtered["typeKey"] == "cycling"]["distance"].sum() / 1000
 run_distance_km  = df_filtered[df_filtered["typeKey"] == "running"]["distance"].sum() / 1000
-
-from datetime import timedelta
 
 def format_seconds(seconds):
     if not seconds or seconds == 0:
@@ -208,7 +213,9 @@ with cols_time[2]:
 
 st.markdown("---")
 
+# --------------------------------------------------
 # ---------- Kilometer pro Jahr und Monat ----------
+# --------------------------------------------------
 
 df["startTimeLocal"] = pd.to_datetime(df["startTimeLocal"], errors="coerce")
 
@@ -232,7 +239,9 @@ by_year = df.groupby("year")["distance_km"].sum()
 by_month = df.groupby("month")["distance_km"].sum()
 by_week = df.groupby("week")["distance_km"].sum()
 
+# --------------------------------------------------
 # ---------- Diagramm: Kilometer pro Jahr ----------
+# --------------------------------------------------
 
 st.header("🏃 Kilometer pro Jahr")
 
@@ -286,7 +295,9 @@ fig.update_yaxes(linecolor="white")
 with st.expander("Diagramm anzeigen", expanded=False):
     st.plotly_chart(fig, use_container_width=True)
 
+# ---------------------------------------------------
 # ---------- Diagramm: Kilometer pro Monat ----------
+# ---------------------------------------------------
 
 df["startTimeLocal"] = pd.to_datetime(df["startTimeLocal"], errors="coerce")
 
@@ -363,17 +374,15 @@ fig_m.update_yaxes(linecolor="white")
 with st.expander("Diagramm anzeigen", expanded=False):
     st.plotly_chart(fig_m, use_container_width=True)
 
+# --------------------------------------------------------
 # ---------- Diagramm: Kilometer pro Jahr (Rad) ----------
-
-import ast
+# --------------------------------------------------------
 
 st.header("🚴 Kilometer pro Jahr")
 
-# Frisch laden, damit kein vorheriger Filter (z. B. running) stört
 df_all = pd.read_csv("garmin_activities.csv")
 df_all["startTimeLocal"] = pd.to_datetime(df_all["startTimeLocal"], errors="coerce")
 
-# typeKey zuverlässig ermitteln
 if "activityTypeDTO.typeKey" in df_all.columns:
     df_all["typeKey"] = df_all["activityTypeDTO.typeKey"]
 elif "activityType" in df_all.columns:
@@ -383,15 +392,14 @@ elif "activityType" in df_all.columns:
 else:
     df_all["typeKey"] = None
 
-# Radfahren filtern (ggf. weitere Varianten ergänzen)
-bike_keys = ["cycling"]  # bei Bedarf: "mountain_biking", "virtual_ride", ...
+bike_keys = ["cycling"]  
 df_bike = df_all[df_all["typeKey"].isin(bike_keys)].dropna(subset=["startTimeLocal", "distance"]).copy()
 
 if df_bike.empty:
     types = ", ".join(sorted(map(str, df_all["typeKey"].dropna().unique())))
     st.info(f"Keine Radfahr-Daten gefunden. Verfügbare Typen in der CSV: {types}")
 else:
-    # km pro Jahr
+    
     by_year_bike = (df_bike.groupby(df_bike["startTimeLocal"].dt.year)["distance"].sum() / 1000).sort_index()
 
     fig_bike_year = go.Figure()
@@ -442,7 +450,9 @@ else:
     with st.expander("Diagramm anzeigen", expanded=False):
         st.plotly_chart(fig_bike_year, use_container_width=True)
 
+# ---------------------------------------------------------------------------
 # ---------- Diagramm: Kilometer pro Monat (Rad, letzte 12 Monate) ----------
+# ---------------------------------------------------------------------------
 
 st.header("🚴 Kilometer pro Monat (letzte 12 Monate)")
 

@@ -6,7 +6,9 @@ import ast
 import numpy as np
 import plotly.express as px
 
+# ---------------------------------
 # ---------- Textbereich ----------
+# ---------------------------------
 
 st.title("Effizienzsteigerung im Ausdauertraining: Eine datenbasierte Untersuchung mittels Herzfrequenz-Geschwindigkeits-Beziehung.")
 
@@ -28,6 +30,7 @@ with st.expander("Mit zunehmender Ausdauer sinkt meine Herzfrequenz bei vergleic
 
 st.write("---")
 
+# ---------------------------------------
 # ---------- Daten vorbereiten ----------
 
 df = pd.read_csv("garmin_activities.csv")

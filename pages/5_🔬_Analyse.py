@@ -7,7 +7,9 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 
+# --------------------------------
 # ---------- Schriftart ----------
+# --------------------------------
 
 st.markdown("""
     <style>
@@ -19,7 +21,9 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# ---------------------------------
 # ---------- Textbereich ----------
+# ---------------------------------
 
 st.title("📈 Effizienzsteigerung im Ausdauertraining: Eine datenbasierte Untersuchung mittels Herzfrequenz-Geschwindigkeits-Beziehung.")
 
@@ -45,7 +49,9 @@ st.write("---")
 
 st.header("➡️ Analyse")
 
+# ---------------------------------------
 # ---------- Daten vorbereiten ----------
+# ---------------------------------------
 
 df = pd.read_csv("garmin_activities.csv")
 df["startTimeLocal"] = pd.to_datetime(df["startTimeLocal"], errors="coerce")
@@ -70,7 +76,9 @@ df["distance_km"] = df["distance"] / 1000
 df["duration_h"] = df["duration"] / 3600
 df["speed_kmh"] = df["distance_km"] / df["duration_h"]
 
+# ---------------------------------
 # ---------- Scatterplot ----------
+# ---------------------------------
 
 fig = px.scatter(
     df,
@@ -125,11 +133,15 @@ fig.update_traces(marker=dict(color="white", size=8, line=dict(width=1)))
 with st.expander("Scatterplot: Zusammenhang zwischen Herzfrequenz und Geschwindigkeit", expanded=False):
     st.plotly_chart(fig, use_container_width=True)
 
+# ---------------------------------------------
 # ---------- Korrelationskoeffizient ----------
+# ---------------------------------------------
 
 correlation = np.corrcoef(df["averageHR"], df["speed_kmh"])[0, 1]
 
+# ---------------------------
 # ---------- Ampel ----------
+# ---------------------------
 
 if abs(correlation) >= 0.7:
     color = "#39FF14"  
@@ -162,7 +174,9 @@ with st.expander("Korrelationskoeffizient (r) anzeigen", expanded=False):
         unsafe_allow_html=True
     )
 
+# ----------------------------------------------------
 # ---------- Diagramm: Durchschnittliche HF ----------
+# ----------------------------------------------------
 
 avg_hr = df["averageHR"].mean()
 
@@ -212,7 +226,9 @@ fig.add_trace(go.Scatter(
 with st.expander("Durchschnittliche Herzfrequenz", expanded=False):
     st.plotly_chart(fig, use_container_width=True)
 
-# ---------- Diagramm: Durchschnittliche Geschwindigkeit
+# -----------------------------------------------------------------
+# ---------- Diagramm: Durchschnittliche Geschwindigkeit ----------
+# -----------------------------------------------------------------
 
 df["speed_kmh"] = (df["distance"] / 1000) / (df["duration"] / 3600)
 avg_speed = df["speed_kmh"].mean()
@@ -269,7 +285,9 @@ fig.add_trace(go.Scatter(
 with st.expander("Durchschnittliche Geschwindigkeit", expanded=False):
     st.plotly_chart(fig, use_container_width=True)
 
+# -------------------------------------------------------------------------------
 # ---------- Vergleich: Herzfrequenz & Geschwindigkeit (Originalwerte) ----------
+# -------------------------------------------------------------------------------
 
 df["speed_kmh"] = (df["distance"] / 1000) / (df["duration"] / 3600)
 
@@ -366,7 +384,9 @@ fig.add_trace(go.Scatter(
 with st.expander("Vergleich: Herzfrequenz & Geschwindigkeit (Originalwerte)", expanded=False):
     st.plotly_chart(fig, use_container_width=True)
 
+# ---------------------------------------------------
 # ---------- Normalisiertes Liniendiagramm ----------
+# ---------------------------------------------------
 
 df_filtered = df[["startTimeLocal", "averageHR", "speed_kmh"]].dropna()
 
@@ -435,7 +455,7 @@ highlight_date = pd.to_datetime("2025-05-06")
 highlight_rows = df_filtered[df_filtered["startTimeLocal"].dt.date == highlight_date.date()]
 
 if not highlight_rows.empty:
-    # Punkt für normierte Geschwindigkeit
+   
     fig.add_trace(go.Scatter(
         x=highlight_rows["startTimeLocal"],
         y=highlight_rows["Speed_norm"],
@@ -445,12 +465,12 @@ if not highlight_rows.empty:
         showlegend=False
     ))
 
-    # Punkt für normierte Herzfrequenz
+    
     fig.add_trace(go.Scatter(
         x=highlight_rows["startTimeLocal"],
         y=highlight_rows["HR_norm"],
         mode="markers",
-        marker=dict(color="green", size=10, symbol="circle"),  # offener Kreis, um sich abzuheben
+        marker=dict(color="green", size=10, symbol="circle"),  
         name="",
         showlegend=False
     ))
@@ -458,7 +478,9 @@ if not highlight_rows.empty:
 with st.expander("Normalisiertes Liniendiagramm", expanded=False):
     st.plotly_chart(fig, use_container_width=True)
 
+# ----------------------------------------------------
 # ---------- Differenz der Normalisierungen ----------
+# ----------------------------------------------------
 
 df_filtered["Differenz"] = df_filtered["Speed_norm"] - df_filtered["HR_norm"]
 
@@ -535,7 +557,9 @@ with st.expander("Differenz der Normalisierungen", expanded=False):
 
 st.write("---")
 
+# ------------------------------
 # ---------- Ergebnis ----------
+# ------------------------------
 
 st.header("➡️ Ergebnis")
 
