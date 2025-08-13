@@ -1,4 +1,6 @@
 startTimeLocal,activityType,distance,duration,averageSpeed,averageHR,calories
+2025-08-13 07:15:12,"{'typeId': 27, 'typeKey': 'lap_swimming', 'parentTypeId': 26, 'isHidden': False, 'restricted': False, 'trimmable': False}",1000.0,1536.1610107421875,0.6510000228881836,,279.0
+2025-08-12 18:52:33,"{'typeId': 2, 'typeKey': 'cycling', 'parentTypeId': 17, 'isHidden': False, 'restricted': False, 'trimmable': True}",18963.349609375,2832.839111328125,6.693999767303467,102.0,313.0
 2025-08-11 17:38:18,"{'typeId': 1, 'typeKey': 'running', 'parentTypeId': 17, 'isHidden': False, 'restricted': False, 'trimmable': True}",5556.75,1979.2490234375,2.808000087738037,123.0,356.0
 2025-08-10 13:39:35,"{'typeId': 2, 'typeKey': 'cycling', 'parentTypeId': 17, 'isHidden': False, 'restricted': False, 'trimmable': True}",73010.2734375,11615.41796875,6.285999774932862,103.0,1127.0
 2025-08-09 11:54:48,"{'typeId': 1, 'typeKey': 'running', 'parentTypeId': 17, 'isHidden': False, 'restricted': False, 'trimmable': True}",4998.18017578125,1415.791015625,3.5299999713897705,148.0,355.0
