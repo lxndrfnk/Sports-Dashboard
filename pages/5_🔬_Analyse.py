@@ -27,16 +27,18 @@ st.write("---")
 
 st.header("➡️ Hypothese")
 
-with st.expander("Mit zunehmender Ausdauer sinkt meine Herzfrequenz bei vergleichbarer Geschwindigkeit.", expanded=False):
+with st.expander("Mit zunehmender Ausdauer kann ich bei gleicher Geschwindigkeit eine niedrigere Herzfrequenz halten – oder bei höherer Geschwindigkeit die Herzfrequenz auf gleichem Niveau halten bzw. sogar senken.", expanded=False):
 
     st.markdown("""
                 
-    Im Rahmen dieses Projekts werden Trainingsdaten aus meinem Garmin-Account systematisch ausgewertet, um sportliche Entwicklungen nachvollziehbar darzustellen. 
-    Der Schwerpunkt liegt auf dem Zusammenhang zwischen meiner durchschnittlichen Herzfrequenz und meiner Laufgeschwindigkeit (km/h). 
-    Neben Einzelverläufen beider Kennzahlen im Zeitverlauf werden diese zusätzlich normiert dargestellt, um Veränderungen visuell vergleichbar zu machen. 
-    Ein separates Differenzdiagramm zeigt die Abweichung zwischen Herzfrequenz und Geschwindigkeit und ermöglicht Rückschlüsse auf Effizienzsteigerungen. 
-    Ergänzend quantifiziert ein Scatterplot mit Regressionslinie die Korrelation zwischen beiden Größen. 
-    Alle Auswertungen basieren auf echten Laufdaten. Ziel ist es, trainingsbedingte Entwicklungen datenbasiert sichtbar zu machen und die Wirksamkeit meines Ausdauertrainings zu bewerten.
+    In diesem Projekt werte ich Trainingsdaten meines Garmin-Accounts systematisch aus, um meine ausdauerspezifische Entwicklung zu dokumentieren. 
+    Der Fokus liegt auf dem Zusammenhang zwischen meiner durchschnittlichen Herzfrequenz und meiner durchschnittlichen Laufgeschwindigkeit (km/h).
+    
+    Ein Scatterplot mit Regressionslinie veranschaulicht und quantifiziert die Korrelation zwischen beiden Größen.
+    
+    Im weiteren Verlauf betrachte ich beide Kennzahlen über die Zeit – zunächst einzeln, dann normiert. Ein Differenzdiagramm zeigt schließlich die Abweichung zwischen Herzfrequenz und Geschwindigkeit und liefert Hinweise auf mögliche Effizienzsteigerungen.
+    
+    Alle Analysen basieren auf echten Laufdaten. Ziel ist es, trainingsbedingte Veränderungen datenbasiert sichtbar zu machen und die Wirksamkeit meines Ausdauertrainings zu bewerten.
     """)
 
 st.write("---")
@@ -136,7 +138,7 @@ elif abs(correlation) >= 0.4:
 else:
     color = "#f94144"  
 
-with st.expander("Korrelationskoeffizient anzeigen", expanded=False):
+with st.expander("Korrelationskoeffizient (r) anzeigen", expanded=False):
     st.markdown(
         f"""
         <div style='
@@ -194,7 +196,7 @@ fig = go.Figure(layout=layout)
 fig.add_trace(go.Scatter(
     x=df["startTimeLocal"],
     y=df["averageHR"],
-    mode="lines",
+    mode="lines+markers",
     line=dict(color="white", width=2),
     name="Ø HF"
 ))
@@ -251,7 +253,7 @@ fig = go.Figure(layout=layout)
 fig.add_trace(go.Scatter(
     x=df["startTimeLocal"],
     y=df["speed_kmh"],
-    mode="lines",
+    mode="lines+markers",
     line=dict(color="white", width=2, dash="dot"),
     name="Ø Geschwindigkeit"
 ))
@@ -428,6 +430,31 @@ fig.add_trace(go.Scatter(
     line=dict(color="lightgray", width=2, dash="dot")
 ))
 
+highlight_date = pd.to_datetime("2025-05-06")
+
+highlight_rows = df_filtered[df_filtered["startTimeLocal"].dt.date == highlight_date.date()]
+
+if not highlight_rows.empty:
+    # Punkt für normierte Geschwindigkeit
+    fig.add_trace(go.Scatter(
+        x=highlight_rows["startTimeLocal"],
+        y=highlight_rows["Speed_norm"],
+        mode="markers",
+        marker=dict(color="green", size=10, symbol="circle"),
+        name="",
+        showlegend=False
+    ))
+
+    # Punkt für normierte Herzfrequenz
+    fig.add_trace(go.Scatter(
+        x=highlight_rows["startTimeLocal"],
+        y=highlight_rows["HR_norm"],
+        mode="markers",
+        marker=dict(color="green", size=10, symbol="circle"),  # offener Kreis, um sich abzuheben
+        name="",
+        showlegend=False
+    ))
+
 with st.expander("Normalisiertes Liniendiagramm", expanded=False):
     st.plotly_chart(fig, use_container_width=True)
 
@@ -477,10 +504,23 @@ fig_diff = go.Figure(layout=layout)
 fig_diff.add_trace(go.Scatter(
     x=df_filtered["startTimeLocal"],
     y=df_filtered["Differenz"],
-    mode="lines",
+    mode="lines+markers",
     line=dict(color="white", width=2, dash="solid"),
     name="Differenz"
 ))
+
+highlight_date = pd.to_datetime("2025-05-06").date()
+
+mask = df_filtered["startTimeLocal"].dt.date == highlight_date
+if mask.any():
+    fig_diff.add_trace(go.Scatter(
+        x=df_filtered.loc[mask, "startTimeLocal"],
+        y=(df_filtered.loc[mask, "Speed_norm"] - df_filtered.loc[mask, "HR_norm"]),
+        mode="markers",
+        marker=dict(color="green", size=10, symbol="circle"),
+        name="06.05.25",
+        showlegend=False
+    ))
 
 # fig_diff.add_trace(go.Scatter(
 #     x=df_filtered["startTimeLocal"],
@@ -502,21 +542,20 @@ st.header("➡️ Ergebnis")
 with st.expander("Zusammenfassende Analyse der Herzfrequenz-Geschwindigkeits-Beziehung", expanded=False):
     st.markdown("""
 
-    Im Zentrum dieser Untersuchung steht die Frage, ob sich durch mein Lauftraining eine Verbesserung der Ausdauerleistung erkennen lässt – messbar durch den Zusammenhang zwischen Herzfrequenz und Laufgeschwindigkeit. Zur Beantwortung wurden ausschließlich Laufaktivitäten aus meinem Garmin-Profil herangezogen und systematisch analysiert.
+    Im Zentrum dieser Untersuchung steht die Frage, ob sich durch mein Lauftraining eine Verbesserung der Ausdauerleistung erkennen lässt – messbar durch den Zusammenhang zwischen Herzfrequenz und Laufgeschwindigkeit.
 
-    Die grundlegende Annahme war: Wenn sich meine Ausdauer verbessert, sollte ich bei gleicher oder höherer Geschwindigkeit mit einer niedrigeren Herzfrequenz laufen können.** Erwartet hätte man in diesem Fall eine negative Korrelation zwischen den beiden Größen.
+    Die grundlegende Annahme war: 
+    ```
+    Mit zunehmender Ausdauer kann ich bei gleicher Geschwindigkeit eine niedrigere Herzfrequenz halten – oder bei höherer Geschwindigkeit die Herzfrequenz auf gleichem Niveau halten bzw. sogar senken.
+    ```
+    Die Analyse ergibt eine positive Korrelation zwischen durchschnittlicher Herzfrequenz und Geschwindigkeit – ein durchaus plausibles Ergebnis, das sich mit typischem Trainingsverhalten erklären lässt: Intensivere Läufe führen naturgemäß zu einer höheren Geschwindigkeit und gleichzeitig zu einer höheren Herzfrequenz. Das bedeutet: Die Korrelation spiegelt vor allem das Verhältnis zwischen Trainingsintensität und körperlicher Reaktion wider – nicht zwingend den Trainingseffekt.
 
-    Die tatsächliche Analyse ergibt jedoch eine positive Korrelation von +0.4 zwischen durchschnittlicher Herzfrequenz und Geschwindigkeit – ein durchaus plausibles Ergebnis, das sich mit typischem Trainingsverhalten erklären lässt: Intensivere Läufe führen naturgemäß zu einer höheren Geschwindigkeit und gleichzeitig zu einer höheren Herzfrequenz. Das bedeutet: Die Korrelation spiegelt vor allem das Verhältnis zwischen Trainingsintensität und körperlicher Reaktion wider – nicht zwingend den Trainingseffekt.
-
-    Um den Trainingseffekt dennoch sichtbar zu machen, wurden weitere Visualisierungen eingesetzt:
-     ```
-    • Ein Liniendiagramm mit Zeitverlauf zeigt getrennt die Entwicklung der durchschnittlichen Geschwindigkeit und Herzfrequenz über die letzten Monate.
+    Um den Trainingseffekt sichtbar zu machen, wurden weitere Visualisierungen eingesetzt:
+    ```
     • Ein normalisiertes Liniendiagramm skaliert beide Größen auf denselben Wertebereich (0–1) und ermöglicht so einen direkten visuellen Vergleich der Trends.
-    • Ein Differenzdiagramm** stellt die Lücke zwischen der Entwicklung von HF und Geschwindigkeit dar – hier lassen sich Fortschritte durch abnehmende Differenzwerte oder eine Verlagerung der Kurve erkennen.
-     ```
-    Insgesamt lässt sich aus den Verlaufsdiagrammen eine **tendenzielle Verbesserung** ablesen: Während die Geschwindigkeit leicht zunimmt, bleibt die Herzfrequenz im Mittel stabil oder sinkt leicht – ein Indiz für wachsende Effizienz im Training.
-
-    Die Korrelation selbst gibt daher keinen direkten Hinweis auf eine Verbesserung, sondern beschreibt nur die gleichzeitige Entwicklung zweier Werte pro Lauf. Erst die **Verlaufskurven und Differenzwerte** ermöglichen eine Bewertung der Frage, ob mein Training Wirkung zeigt.
+    • Ein Differenzdiagramm stellt die Lücke zwischen der Entwicklung von HF und Geschwindigkeit dar – hier lassen sich Fortschritte durch zunehmende Differenzwerte erkennen.
+    ```
+    Insgesamt lässt sich aus den Verlaufsdiagrammen eine tendenzielle Verbesserung ablesen: Während die Geschwindigkeit leicht zunimmt, bleibt die Herzfrequenz im Mittel stabil oder sinkt leicht – ein Indiz für wachsende Effizienz im Training.
     """)
 
 st.write("---")

@@ -74,7 +74,7 @@ with tab3:
     st.markdown("""
         ```
         • Weiße Linie: Tageswerte (durchschnittliche Effizienz pro Tag)  
-        • Rote, gestrichelte Linie: Trend/Prognose (glättet Schwankungen und zeigt die Richtung)
+        • Rote, gestrichelte Linie: Trend
         ```
         
         <u>Interpretation:</u>
@@ -91,7 +91,7 @@ st.write("---")
 
 # ---------- Diagramm ----------
 
-# --- Daten laden ---
+# --- CSV laden ---
 df_all = pd.read_csv("garmin_activities.csv")
 df_all["startTimeLocal"] = pd.to_datetime(df_all["startTimeLocal"], errors="coerce")
 
@@ -123,7 +123,7 @@ else:
     # Geschwindigkeit (km/h)
     dfR["speed_kmh"] = (dfR["distance"] / 1000) / (dfR["duration"] / 3600)
 
-    # Min-Max-Normalisierung (auf den gefilterten Daten)
+    # Min-Max-Normalisierung
     def minmax(s):
         lo, hi = s.min(), s.max()
         return (s - lo) / (hi - lo) if hi > lo else s * 0 + 0.5
@@ -134,7 +134,7 @@ else:
     # Effizienz = norm. Speed − norm. HF
     dfR["efficiency"] = dfR["Speed_norm"] - dfR["HR_norm"]
 
-    # Tagesmittel NUR für Trainingstage (keine Lücken auffüllen)
+    # Tagesmittel
     df_daily = (
         dfR.groupby(dfR["startTimeLocal"].dt.date)["efficiency"]
            .mean()
@@ -145,45 +145,36 @@ else:
     df_daily = df_daily.sort_values("date")
 
     if len(df_daily) < 3:
-        st.info("Für eine Trendlinie werden mindestens 3 unterschiedliche Trainingstage benötigt.")
+        st.info("Für eine Trendlinie werden mindestens 3 Tage mit Daten benötigt.")
     else:
-        # Regression NUR über Trainingstage
-        x_days = (df_daily["date"] - df_daily["date"].min()).dt.days.to_numpy()
-        y_vals = df_daily["eff_daily"].to_numpy()
-        slope, intercept = np.polyfit(x_days, y_vals, deg=1)
+        # --- Lineare Regression (Trendlinie) ---
+        x = (df_daily["date"] - df_daily["date"].min()).dt.days.to_numpy()
+        y = df_daily["eff_daily"].to_numpy()
+        b1, b0 = np.polyfit(x, y, deg=1)
 
-        # Trendwerte ausschließlich auf den vorhandenen Trainingstagen
-        y_trend_on_training_days = slope * x_days + intercept
+        y_hat = b1 * x + b0
 
-        # Plot
+        # --- Plot ---
         fig = go.Figure()
 
-        # 1) Tageswerte (weiß)
+        # Originaldaten
         fig.add_trace(go.Scatter(
             x=df_daily["date"],
             y=df_daily["eff_daily"],
             mode="lines+markers",
             line=dict(color="white", width=2),
             marker=dict(color="white", size=6),
-            name="Effizienz (Trainingstage)"
+            name="Effizienz"
         ))
 
-        # 2) Trend NUR auf Trainingstagen (rot gestrichelt)
+        # Rote gestrichelte Trendlinie
         fig.add_trace(go.Scatter(
             x=df_daily["date"],
-            y=y_trend_on_training_days,
+            y=y_hat,
             mode="lines",
             line=dict(color="#f94144", width=2, dash="dash"),
-            name="Trend (Trainingstage)"
+            name="Trend"
         ))
-
-        # Gestrichelte 0-Linie (über gesamte Breite)
-        fig.add_shape(
-            type="line",
-            xref="paper", x0=0, x1=1,
-            yref="y",     y0=0, y1=0,
-            line=dict(color="white", width=1, dash="dash")
-        )
 
         fig.update_layout(
             plot_bgcolor="#4b4c4d",
@@ -204,12 +195,13 @@ else:
                 tickfont=dict(color="white"),
                 ticklen=6, tickwidth=1, tickcolor="white", ticks="outside",
                 showgrid=True, gridcolor="white",
+                zeroline=False,
                 range=[-1, 1],
-                tickvals=[-1, -0.5, 0, 0.5, 1],
-                zeroline=False
+                tickvals=[-1, -0.5, 0, 0.5, 1]
             ),
             showlegend=False
         )
 
-        with st.expander("Effizienz-Trend (tageweise, nur Trainingstage) anzeigen", expanded=False):
+        with st.expander("Diagramm anzeigen", expanded=False):
             st.plotly_chart(fig, use_container_width=True)
+
