@@ -30,6 +30,130 @@ st.title("🧠 Prognose")
 
 st.write("---")
 
+# ---------------------------------
+# ---------- Scatterplot ----------
+# ---------------------------------
+
+df_all = pd.read_csv("garmin_activities.csv")
+df_all["startTimeLocal"] = pd.to_datetime(df_all["startTimeLocal"], errors="coerce")
+
+if "activityTypeDTO.typeKey" in df_all.columns:
+    df_all["typeKey"] = df_all["activityTypeDTO.typeKey"]
+elif "activityType" in df_all.columns:
+    df_all["typeKey"] = df_all["activityType"].apply(
+        lambda x: ast.literal_eval(x).get("typeKey") if isinstance(x, str) and "{" in x else x
+    )
+else:
+    df_all["typeKey"] = None
+
+dfR = (
+    df_all[(df_all["typeKey"] == "running")]
+         .dropna(subset=["startTimeLocal", "distance", "duration", "averageHR"])
+         .copy()
+)
+dfR = dfR[dfR["duration"] > 0]
+
+cutoff = pd.to_datetime("2025-01-12")
+dfR = dfR[dfR["startTimeLocal"] > cutoff]
+
+if dfR.empty:
+    st.info("Keine gültigen Laufdaten nach dem 12.01.2025 gefunden.")
+else:
+    dfR["speed_kmh"] = (dfR["distance"]/1000) / (dfR["duration"]/3600)
+
+    x = dfR["averageHR"].to_numpy()
+    y = dfR["speed_kmh"].to_numpy()
+    m, b = np.polyfit(x, y, 1)  # y = m*x + b
+    x_line = np.linspace(x.min(), x.max(), 100)
+    y_line = m * x_line + b
+
+    fig = go.Figure()
+
+    fig.add_trace(go.Scatter(
+        x=dfR["averageHR"], y=dfR["speed_kmh"],
+        mode="markers",
+        marker=dict(color="white", size=8, line=dict(width=1)),
+        hovertemplate="Ø HF: %{x:.0f} bpm<br>Ø Speed: %{y:.2f} km/h<extra></extra>",
+        name=""
+    ))
+
+    fig.add_trace(go.Scatter(
+        x=x_line, y=y_line,
+        mode="lines",
+        line=dict(color="#ffffff", width=2),
+        hoverinfo="skip",
+        name=""
+    ))
+
+    fig.update_layout(
+        plot_bgcolor="#4b4c4d",
+        paper_bgcolor="#4b4c4d",
+        font=dict(color="white"),
+        margin=dict(l=40, r=20, t=20, b=40),
+        xaxis=dict(
+            title="Ø Herzfrequenz (bpm)",
+            title_standoff=40,
+            showline=True, linecolor="white",
+            tickcolor="white", ticklen=6, tickwidth=1, ticks="outside",
+            tickfont=dict(color="white"),
+            showgrid=False
+        ),
+        yaxis=dict(
+            title="Ø Geschwindigkeit (km/h)",
+            title_standoff=40,
+            showline=True, linecolor="white",
+            tickcolor="white", ticklen=6, tickwidth=1, ticks="outside",
+            tickfont=dict(color="white"),
+            showgrid=False
+        ),
+        showlegend=False
+    )
+
+    with st.expander("Scatterplot anzeigen", expanded=False):
+        st.plotly_chart(fig, use_container_width=True)
+
+# ---------------------------------------------
+# ---------- Korrelationskoeffizient ----------
+# ---------------------------------------------
+
+correlation = float(np.corrcoef(dfR["averageHR"], dfR["speed_kmh"])[0, 1])
+
+# ---------------------------
+# ---------- Ampel ----------
+# ---------------------------
+if abs(correlation) >= 0.7:
+    color = "#39FF14"   # grün
+elif abs(correlation) >= 0.4:
+    color = "#FFD700"   # gelb
+else:
+    color = "#f94144"   # rot
+
+with st.expander("Korrelationskoeffizient (r) anzeigen", expanded=False):
+    st.markdown(
+        f"""
+        <div style='
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            height:200px;
+            color:white;
+            font-family: Arial, sans-serif;
+        '>
+            <div style='text-align:center;'>
+                <div style='font-size:20px; margin-bottom:10px;'>
+                    Korrelation zwischen Herzfrequenz & Geschwindigkeit
+                </div>
+                <div style='font-size:36px; font-weight:bold; color:{color};'>
+                    {correlation:.2f}
+                </div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+st.write("---")
+
 # --------------------------------------------------
 # ---------- Effizienz-Trend & Projektion ----------
 # --------------------------------------------------
@@ -96,7 +220,7 @@ with tab3:
 # st.write("---")
 
 # ------------------------------
-# ---------- Diagramm ----------
+# ---------- Effizienz-Trend ----------
 # ------------------------------
 
 df_all = pd.read_csv("garmin_activities.csv")
@@ -199,7 +323,7 @@ else:
             showlegend=False
         )
 
-        with st.expander("Diagramm anzeigen", expanded=False):
+        with st.expander("Effizienz-Trend anzeigen", expanded=False):
             st.plotly_chart(fig, use_container_width=True)
 
 st.write("---")
@@ -267,3 +391,4 @@ st.write("---")
 #         use_container_width=True,
 #         hide_index=True
 #     )
+
