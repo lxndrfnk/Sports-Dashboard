@@ -1,16 +1,12 @@
-# -*- coding: utf-8 -*-
 from garminconnect import Garmin
 import pandas as pd
 
-# Für den Test OHNE .env
 EMAIL = "hi@alexanderfink.com"
 PASSWORD = "DataPlus_2025"
 
-# Garmin-Session starten
 client = Garmin(EMAIL, PASSWORD)
 client.login()
 
-# Beispiel: alle Aktivitäten abrufen
 all_activities = []
 batch_size = 100
 start = 0
@@ -24,7 +20,6 @@ while True:
 
 df = pd.DataFrame(all_activities)
 
-# ✅ Nur die Spalten, die du wirklich brauchst
 columns_to_keep = [
     "startTimeLocal",
     "activityType",
@@ -36,7 +31,6 @@ columns_to_keep = [
     "calories"
 ]
 
-# Manche Spalten fehlen evtl. → nur die, die da sind
 columns_available = [col for col in columns_to_keep if col in df.columns]
 df = df[columns_available]
 

@@ -547,3 +547,11 @@ with st.expander("Erklärung", expanded=False):
     Dann bildest du daraus einen Durchschnittswert.
     Das machst du für jeden Abschnitt – so entsteht eine glatte Kurve, die besser zeigt, ob es aufwärts oder abwärts geht.    
     """)
+
+with st.expander("Zukünftige Implementierungen", expanded=False):
+    st.markdown("""
+        • Automatischer Datenabruf  
+        • Exakte Daten, keine Durchschnittswerte
+        
+    """)
+
