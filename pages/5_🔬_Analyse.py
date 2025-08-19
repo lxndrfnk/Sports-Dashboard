@@ -357,27 +357,6 @@ fig.add_trace(go.Scatter(
     name="Durchschnitt"
 ))
 
-# ---------------------------------------------------
-# ---------- Horizontale Linie bei Min/Max ----------
-# ---------------------------------------------------
-
-# min_val = df["speed_kmh"].min()
-# max_val = df["speed_kmh"].max()
-
-# fig.add_shape(
-#     type="line",
-#     xref="paper", x0=0, x1=1,
-#     yref="y", y0=min_val, y1=min_val,
-#     line=dict(color="lightgray", width=1, dash="dot"),
-# )
-
-# fig.add_shape(
-#     type="line",
-#     xref="paper", x0=0, x1=1,
-#     yref="y", y0=max_val, y1=max_val,
-#     line=dict(color="lightgray", width=1, dash="dot"),
-# )
-
 with st.expander("Durchschnittliche Geschwindigkeit", expanded=False):
     st.plotly_chart(fig, use_container_width=True)
 
