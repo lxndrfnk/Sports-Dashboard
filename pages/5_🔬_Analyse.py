@@ -25,24 +25,17 @@ st.markdown("""
 # ---------- Textbereich ----------
 # ---------------------------------
 
-st.title("📈 Effizienzsteigerung im Ausdauertraining: Eine datenbasierte Untersuchung mittels Herzfrequenz-Geschwindigkeits-Beziehung.")
+st.title("🤔 20 Jahre Laufen – und wofür?")
 
 st.write("---")
 
 st.header("➡️ Hypothese")
 
-with st.expander("Mit zunehmender Ausdauer kann ich bei gleicher Geschwindigkeit eine niedrigere Herzfrequenz halten – oder bei höherer Geschwindigkeit die Herzfrequenz auf gleichem Niveau halten bzw. sogar senken.", expanded=False):
+with st.expander("Meine Effizienz steigt: mehr Geschwindigkeit bei gleicher oder niedrigerer Herzfrequenz.", expanded=False):
 
     st.markdown("""
                 
-    In diesem Projekt werte ich Trainingsdaten meines Garmin-Accounts systematisch aus, um meine ausdauerspezifische Entwicklung zu dokumentieren. 
-    Der Fokus liegt auf dem Zusammenhang zwischen meiner durchschnittlichen Herzfrequenz und meiner durchschnittlichen Laufgeschwindigkeit (km/h).
-    
-    Ein Scatterplot mit Regressionslinie veranschaulicht und quantifiziert die Korrelation zwischen beiden Größen.
-    
-    Im weiteren Verlauf betrachte ich beide Kennzahlen über die Zeit – zunächst einzeln, dann normiert. Ein Differenzdiagramm zeigt schließlich die Abweichung zwischen Herzfrequenz und Geschwindigkeit und liefert Hinweise auf mögliche Effizienzsteigerungen.
-    
-    Alle Analysen basieren auf echten Laufdaten. Ziel ist es, trainingsbedingte Veränderungen datenbasiert sichtbar zu machen und die Wirksamkeit meines Ausdauertrainings zu bewerten.
+    Mit meinen Garmin-Daten zeige ich, wie sich Herzfrequenz und Laufgeschwindigkeit im Training entwickeln.
     """)
 
 st.write("---")
@@ -75,6 +68,84 @@ df = df.sort_values("startTimeLocal")
 df["distance_km"] = df["distance"] / 1000
 df["duration_h"] = df["duration"] / 3600
 df["speed_kmh"] = df["distance_km"] / df["duration_h"]
+
+# -------------------------------
+# ---------- Erwartung ----------
+# -------------------------------
+
+def make_scatter_example(r: float, color: str, title: str):
+    """
+    Erzeugt einen kleinen Demo-Scatter für eine gewünschte Korrelation r.
+    """
+    rng = np.random.default_rng(42 + int(r*100))
+    n = 36
+    cov = np.array([[1, r],
+                    [r, 1]])
+    xy = rng.multivariate_normal(mean=[0, 0], cov=cov, size=n)
+    x = xy[:, 0]
+    y = xy[:, 1]
+
+    m, b = np.polyfit(x, y, 1)
+    x_line = np.linspace(x.min(), x.max(), 50)
+    y_line = m * x_line + b
+
+    fig = go.Figure()
+
+    fig.add_trace(go.Scatter(
+        x=x, y=y,
+        mode="markers",
+        marker=dict(color=color, size=8,
+                    line=dict(width=1)),
+        hovertemplate="x: %{x:.2f}<br>y: %{y:.2f}<extra></extra>",
+        showlegend=False
+    ))
+
+    fig.add_trace(go.Scatter(
+        x=x_line, y=y_line,
+        mode="lines",
+        line=dict(color=color, width=2),
+        hoverinfo="skip",
+        showlegend=False
+    ))
+
+    fig.update_layout(
+        title=title,
+        title_x=0.5,
+        plot_bgcolor="#4b4c4d",
+        paper_bgcolor="#4b4c4d",
+        font=dict(color="white"),
+        margin=dict(l=10, r=10, t=30, b=10),
+        xaxis=dict(
+            showline=True, linecolor="white",
+            tickfont=dict(color="white"),
+            ticks="outside", tickcolor="white", ticklen=4, tickwidth=1,
+            showgrid=False, zeroline=False,
+            showticklabels=False
+        ),
+        yaxis=dict(
+            showline=True, linecolor="white",
+            tickfont=dict(color="white"),
+            ticks="outside", tickcolor="white", ticklen=4, tickwidth=1,
+            showgrid=False, zeroline=False,
+            showticklabels=False
+        ),
+        height=260
+    )
+    return fig
+
+with st.expander("Erwartete Korrelation", expanded=False):
+    c1, c2, c3 = st.columns(3)
+
+    fig0  = make_scatter_example(r=0.0,  color="#ffffff", title="r = 0")
+    fig05 = make_scatter_example(r=0.5,  color="#ffffff", title="r = 0,5")
+    fig09 = make_scatter_example(r=0.9,  color="#ffffff", title="r = 0,9")
+
+    with c1:
+        st.plotly_chart(fig0,  use_container_width=True)
+    with c2:
+        st.plotly_chart(fig05, use_container_width=True)
+    with c3:
+        st.plotly_chart(fig09, use_container_width=True)
 
 # ---------------------------------
 # ---------- Scatterplot ----------
@@ -194,13 +265,15 @@ layout = go.Layout(
         color="white"
     ),
     yaxis=dict(
+        rangemode="tozero",
         title="Ø Herzfrequenz (bpm)",   
         title_standoff=40,
         showgrid=False,
         showline=True,
         linecolor="white",
         tickcolor="white",
-        color="white"
+        color="white",
+        zeroline=False
     ),
     margin=dict(l=20, r=20, t=20, b=40),
 )
@@ -250,6 +323,7 @@ layout = go.Layout(
         tickfont=dict(color="white")
     ),
     yaxis=dict(
+        rangemode="tozero",
         title="Ø Geschwindigkeit (km/h)",
         title_standoff=40,
         showgrid=False,
@@ -259,7 +333,8 @@ layout = go.Layout(
         ticks="outside",
         ticklen=6,
         tickwidth=1,
-        tickfont=dict(color="white")
+        tickfont=dict(color="white"),
+        zeroline=False
     ),
     margin=dict(l=20, r=20, t=20, b=40)
 )
@@ -281,6 +356,27 @@ fig.add_trace(go.Scatter(
     line=dict(color="lightgray", width=1, dash="dash"),
     name="Durchschnitt"
 ))
+
+# ---------------------------------------------------
+# ---------- Horizontale Linie bei Min/Max ----------
+# ---------------------------------------------------
+
+# min_val = df["speed_kmh"].min()
+# max_val = df["speed_kmh"].max()
+
+# fig.add_shape(
+#     type="line",
+#     xref="paper", x0=0, x1=1,
+#     yref="y", y0=min_val, y1=min_val,
+#     line=dict(color="lightgray", width=1, dash="dot"),
+# )
+
+# fig.add_shape(
+#     type="line",
+#     xref="paper", x0=0, x1=1,
+#     yref="y", y0=max_val, y1=max_val,
+#     line=dict(color="lightgray", width=1, dash="dot"),
+# )
 
 with st.expander("Durchschnittliche Geschwindigkeit", expanded=False):
     st.plotly_chart(fig, use_container_width=True)
@@ -312,6 +408,7 @@ layout = go.Layout(
         tickfont=dict(color="white")
     ),
     yaxis=dict(
+        rangemode="tozero",
         title="Ø Herzfrequenz (bpm)",
         title_standoff=40,
         showgrid=False,
@@ -321,9 +418,11 @@ layout = go.Layout(
         ticks="outside",
         ticklen=6,
         tickwidth=1,
-        tickfont=dict(color="white")
+        tickfont=dict(color="white"),
+        zeroline=False
     ),
     yaxis2=dict(
+        rangemode="tozero",
         title="Ø Geschwindigkeit (km/h)",
         title_standoff=40,
         overlaying="y",
@@ -335,7 +434,8 @@ layout = go.Layout(
         ticks="outside",
         ticklen=6,
         tickwidth=1,
-        tickfont=dict(color="white")
+        tickfont=dict(color="white"),
+        zeroline=False
     )
 )
 
@@ -475,6 +575,23 @@ if not highlight_rows.empty:
         showlegend=False
     ))
 
+min_val = 0
+max_val = 1
+
+fig.add_shape(
+    type="line",
+    xref="paper", x0=0, x1=1,
+    yref="y", y0=min_val, y1=min_val,
+    line=dict(color="white", width=1),
+)
+
+fig.add_shape(
+    type="line",
+    xref="paper", x0=0, x1=1,
+    yref="y", y0=max_val, y1=max_val,
+    line=dict(color="white", width=1),
+)
+
 with st.expander("Normalisiertes Liniendiagramm", expanded=False):
     st.plotly_chart(fig, use_container_width=True)
 
@@ -563,7 +680,7 @@ st.write("---")
 
 st.header("➡️ Ergebnis")
 
-with st.expander("Zusammenfassende Analyse der Herzfrequenz-Geschwindigkeits-Beziehung", expanded=False):
+with st.expander("Zusammenfassende Analyse", expanded=False):
     st.markdown("""
 
     Im Zentrum dieser Untersuchung steht die Frage, ob sich durch mein Lauftraining eine Verbesserung der Ausdauerleistung erkennen lässt – messbar durch den Zusammenhang zwischen Herzfrequenz und Laufgeschwindigkeit.

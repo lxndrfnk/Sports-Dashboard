@@ -28,11 +28,91 @@ st.markdown("""
 
 st.title("🧠 Prognose")
 
-st.write("---")
+# # ---------------------------------------
+# # ---------- Daten vorbereiten ----------
+# # ---------------------------------------
 
-# ---------------------------------
-# ---------- Scatterplot ----------
-# ---------------------------------
+# df = pd.read_csv("garmin_activities.csv")
+# df["startTimeLocal"] = pd.to_datetime(df["startTimeLocal"], errors="coerce")
+
+# if "activityTypeDTO.typeKey" in df.columns:
+#     df["typeKey"] = df["activityTypeDTO.typeKey"]
+# elif "activityType" in df.columns:
+#     df["typeKey"] = df["activityType"].apply(lambda x: ast.literal_eval(x).get("typeKey") if isinstance(x, str) and "{" in x else x)
+# else:
+#     df["typeKey"] = None
+
+# df = df[
+#     (df["typeKey"] == "running") &
+#     df["averageHR"].notna() &
+#     df["duration"].notna() &
+#     df["distance"].notna() &
+#     (df["duration"] > 0)
+# ].copy()
+
+# df = df.sort_values("startTimeLocal")
+# df["distance_km"] = df["distance"] / 1000
+# df["duration_h"] = df["duration"] / 3600
+# df["speed_kmh"] = df["distance_km"] / df["duration_h"]
+
+# st.write("---")
+
+# fig = px.scatter(
+#     df,
+#     x="averageHR",
+#     y="speed_kmh",
+#     trendline="ols",  
+#     labels={
+#         "averageHR": "Ø Herzfrequenz (bpm)",
+#         "speed_kmh": "Ø Geschwindigkeit (km/h)"
+#     },
+#     title="",  
+#     template="plotly_dark",
+#     width=1000,
+#     height=500
+# )
+
+# fig.update_layout(
+#     plot_bgcolor="#4b4c4d",
+#     paper_bgcolor="#4b4c4d",
+#     font=dict(color="white"),
+#     margin=dict(l=40, r=20, t=40, b=40),
+#     xaxis=dict(
+#         title="Ø Herzfrequenz (bpm)",
+#         title_standoff=40,
+#         color="white",
+#         tickcolor="white",
+#         linecolor="white",
+#         showline=True,
+#         showgrid=False,
+#         ticks="outside",           
+#         ticklen=6,                
+#         tickwidth=1,              
+#         tickfont=dict(color="white")
+#     ),
+#     yaxis=dict(
+#         title="Ø Geschwindigkeit (km/h)",
+#         title_standoff=40,
+#         color="white",
+#         tickcolor="white",
+#         linecolor="white",
+#         showline=True,
+#         showgrid=False,
+#         ticks="outside",
+#         ticklen=6,
+#         tickwidth=1,
+#      tickfont=dict(color="white")
+#     )
+# )
+
+# fig.update_traces(marker=dict(color="white", size=8, line=dict(width=1)))
+
+# with st.expander("Scatterplot: Zusammenhang zwischen Herzfrequenz und Geschwindigkeit", expanded=False):
+#     st.plotly_chart(fig, use_container_width=True)
+
+# ---------------------------------------
+# ---------- Scatterplot (neu) ----------
+# ---------------------------------------
 
 df_all = pd.read_csv("garmin_activities.csv")
 df_all["startTimeLocal"] = pd.to_datetime(df_all["startTimeLocal"], errors="coerce")
@@ -109,7 +189,7 @@ else:
         showlegend=False
     )
 
-    with st.expander("Scatterplot anzeigen", expanded=False):
+    with st.expander("Scatterplot (neu) anzeigen", expanded=False):
         st.plotly_chart(fig, use_container_width=True)
 
 # ---------------------------------------------
@@ -170,9 +250,6 @@ with tab1:
         • Hohe Geschwindigkeit bei niedriger HF = effizient  
         • Niedrige Geschwindigkeit bei hoher HF = weniger effizient
         ```
-                
-        Dafür rechne ich beide Größen (Geschwindigkeit, HF) auf eine gemeinsame Skala um.  
-        So sind sie vergleichbar. Danach bilde ich die Differenz.
         
         """)
 
@@ -219,9 +296,9 @@ with tab3:
 
 # st.write("---")
 
-# ------------------------------
+# -------------------------------------
 # ---------- Effizienz-Trend ----------
-# ------------------------------
+# -------------------------------------
 
 df_all = pd.read_csv("garmin_activities.csv")
 df_all["startTimeLocal"] = pd.to_datetime(df_all["startTimeLocal"], errors="coerce")
@@ -392,3 +469,81 @@ st.write("---")
 #         hide_index=True
 #     )
 
+#------------------------------------------
+# ---------- Verhältnis-Diagramm ----------
+#------------------------------------------
+
+st.header("➡️ Verhältnis: Herzfrequenz / Geschwindigkeit")
+
+if "speed_kmh" not in dfR.columns:
+    dfR["speed_kmh"] = (dfR["distance"]/1000) / (dfR["duration"]/3600)
+
+dfR["hr_per_speed"] = dfR["averageHR"] / dfR["speed_kmh"]
+
+df_ratio_daily = (
+    dfR.groupby(dfR["startTimeLocal"].dt.date)["hr_per_speed"]
+        .mean()
+        .reset_index()
+        .rename(columns={"startTimeLocal": "date", "hr_per_speed": "ratio"})
+)
+df_ratio_daily["date"] = pd.to_datetime(df_ratio_daily["date"])
+
+df_ratio_daily["ratio_smooth"] = df_ratio_daily["ratio"].rolling(window=10, center=True).mean()
+
+fig = go.Figure()
+
+fig.add_trace(go.Scatter(
+    x=df_ratio_daily["date"],
+    y=df_ratio_daily["ratio"],
+    mode="markers+lines",
+    line=dict(color="white", width=2),
+    marker=dict(color="white", size=6),
+    name="Tageswerte"
+))
+
+fig.add_trace(go.Scatter(
+    x=df_ratio_daily["date"],
+    y=df_ratio_daily["ratio_smooth"],
+    mode="lines",
+    line=dict(color="#f94144", width=2, dash="dash"),
+    name="10-Tage Durchschnitt"
+))
+
+fig.update_layout(
+    plot_bgcolor="#4b4c4d",
+    paper_bgcolor="#4b4c4d",
+    font=dict(color="white"),
+    margin=dict(l=40, r=20, t=30, b=40),
+    xaxis=dict(
+        title="",
+        showline=True, linecolor="white",
+        tickfont=dict(color="white"),
+        ticklen=6, tickwidth=1, tickcolor="white", ticks="outside",
+        showgrid=False
+    ),
+    yaxis=dict(
+        title="Herzfrequenz pro Geschwindigkeit (bpm pro km/h)",
+        title_standoff=40,
+        showline=True, linecolor="white",
+        tickfont=dict(color="white"),
+        ticklen=6, tickwidth=1, tickcolor="white", ticks="outside",
+        showgrid=False, gridcolor="white",
+        zeroline=False
+    ),
+    showlegend=True
+)
+
+with st.expander("Diagramm anzeigen", expanded=False):
+    st.plotly_chart(fig, use_container_width=True)
+
+with st.expander("Erklärung", expanded=False):
+    st.markdown("""
+
+    Das Verhältnis zeigt, wie viele Herzschläge ich brauche, um eine bestimmte Geschwindigkeit zu halten.
+    Je weniger Schläge pro km/h, desto effizienter bin ich unterwegs.
+    Es ist also ein direkter Hinweis auf meine Ausdauerleistung.
+
+    Stell dir vor, du schaust dir nicht jeden einzelnen Trainingstag an, sondern immer einen kleinen Abschnitt, z.B. die letzten 10 Tage.
+    Dann bildest du daraus einen Durchschnittswert.
+    Das machst du für jeden Abschnitt – so entsteht eine glatte Kurve, die besser zeigt, ob es aufwärts oder abwärts geht.    
+    """)
